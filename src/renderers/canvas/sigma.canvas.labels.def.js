@@ -62,8 +62,22 @@
         labelPlacementX =
           Math.round(node[prefix + 'x'] - size - labelWidth - 3);
         break;
+      case 'left-edge':
+        labelPlacementX = 3;
+        if (labelWidth > node[prefix + 'x'] - size - 3) {
+          labelPlacementX =
+            Math.round(node[prefix + 'x'] - size - labelWidth - 3);
+        }
+        break;
       case 'right':
         labelPlacementX = Math.round(node[prefix + 'x'] + size + 3);
+        break;
+      case 'right-edge':
+        labelPlacementX = Math.round(context.canvas.width - labelWidth - 3);
+
+        if (labelPlacementX < node[prefix + 'x'] + size + 3) {
+          labelPlacementX = Math.round(node[prefix + 'x'] + size + 3);
+        }
         break;
       case 'top':
         labelPlacementX = Math.round(node[prefix + 'x'] - labelWidth / 2);
