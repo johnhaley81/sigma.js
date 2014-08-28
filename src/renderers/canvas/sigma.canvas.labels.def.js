@@ -29,7 +29,7 @@
     if (typeof node.label !== 'string')
       return;
 
-    if (settings('labelAlignment') === undefined){ 
+    if (settings('labelAlignment') === undefined) {
       alignment = settings('defaultLabelAlignment');
     } else {
       alignment = settings('labelAlignment');
@@ -51,25 +51,26 @@
 
     switch (alignment) {
       case 'inside':
-        if (labelWidth <= size * 2){
-          labelPlacementX = Math.round(node[prefix + 'x'] - labelWidth / 2 );
+        if (labelWidth <= size * 2) {
+          labelPlacementX = Math.round(node[prefix + 'x'] - labelWidth / 2);
         }
         break;
       case 'center':
-        labelPlacementX = Math.round(node[prefix + 'x'] - labelWidth / 2 );
+        labelPlacementX = Math.round(node[prefix + 'x'] - labelWidth / 2);
         break;
       case 'left':
-        labelPlacementX = Math.round(node[prefix + 'x'] - size - labelWidth - 3 );
+        labelPlacementX =
+          Math.round(node[prefix + 'x'] - size - labelWidth - 3);
         break;
       case 'right':
         labelPlacementX = Math.round(node[prefix + 'x'] + size + 3);
         break;
       case 'top':
-        labelPlacementX = Math.round(node[prefix + 'x'] - labelWidth / 2 );
+        labelPlacementX = Math.round(node[prefix + 'x'] - labelWidth / 2);
         labelPlacementY = labelPlacementY - size - fontSize;
         break;
       case 'bottom':
-        labelPlacementX = Math.round(node[prefix + 'x'] - labelWidth / 2 );
+        labelPlacementX = Math.round(node[prefix + 'x'] - labelWidth / 2);
         labelPlacementY = labelPlacementY + size + fontSize;
         break;
       default:
