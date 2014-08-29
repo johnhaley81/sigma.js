@@ -29,11 +29,10 @@
     if (typeof node.label !== 'string')
       return;
 
-    if (settings('labelAlignment') === undefined) {
-      alignment = settings('defaultLabelAlignment');
-    } else {
-      alignment = settings('labelAlignment');
-    }
+    alignment =
+      node.alignment ||
+      settings('labelAlignment') ||
+      settings('defaultLabelAlignment');
 
     fontSize = (settings('labelSize') === 'fixed') ?
       settings('defaultLabelSize') :
@@ -64,6 +63,15 @@
         break;
       case 'left-edge':
         labelPlacementX = 3;
+
+        if (labelWidth > node[prefix + 'x'] - size - 3) {
+          labelPlacementX =
+            Math.round(node[prefix + 'x'] - size - labelWidth - 3);
+        }
+        break;
+      case 'left-offset':
+        labelPlacementX = Math.round((settings('labelOffset') || 0) + 3);
+
         if (labelWidth > node[prefix + 'x'] - size - 3) {
           labelPlacementX =
             Math.round(node[prefix + 'x'] - size - labelWidth - 3);
@@ -74,6 +82,18 @@
         break;
       case 'right-edge':
         labelPlacementX = Math.round(context.canvas.width - labelWidth - 3);
+
+        if (labelPlacementX < node[prefix + 'x'] + size + 3) {
+          labelPlacementX = Math.round(node[prefix + 'x'] + size + 3);
+        }
+        break;
+      case 'right-offset':
+        labelPlacementX =
+          Math.round(
+            context.canvas.width -
+            (settings('labelOffset') || 0) -
+            3
+          );
 
         if (labelPlacementX < node[prefix + 'x'] + size + 3) {
           labelPlacementX = Math.round(node[prefix + 'x'] + size + 3);
