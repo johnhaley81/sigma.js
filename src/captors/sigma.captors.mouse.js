@@ -22,6 +22,7 @@
         _target = target,
         _camera = camera,
         _settings = settings,
+        _handlers = _settings('handlers') || {},
 
         // CAMERA MANAGEMENT:
         // ******************
@@ -48,9 +49,27 @@
 
     sigma.classes.dispatcher.extend(this);
 
+    function handlerOverrideWrapper(override, original) {
+      if (!override) {
+        return original;
+      } else {
+        return function(e) {
+          if (override(e)) {
+            original(e);
+          }
+        };
+      }
+    }
+
     sigma.utils.doubleClick(_target, 'click', _doubleClickHandler);
-    _target.addEventListener('DOMMouseScroll', _wheelHandler, false);
-    _target.addEventListener('mousewheel', _wheelHandler, false);
+    _target.addEventListener(
+      'DOMMouseScroll',
+      handlerOverrideWrapper(_handlers.wheelHandler, _wheelHandler),
+      false);
+    _target.addEventListener(
+      'mousewheel',
+      handlerOverrideWrapper(_handlers.wheelHandler, _wheelHandler),
+      false);
     _target.addEventListener('mousemove', _moveHandler, false);
     _target.addEventListener('mousedown', _downHandler, false);
     _target.addEventListener('click', _clickHandler, false);
