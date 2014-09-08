@@ -362,6 +362,8 @@
           'doubleClickNodes',
           'rightClickNode',
           'rightClickNodes',
+          'mousedown',
+          'mouseup',
           'overNode',
           'overNodes',
           'outNode',

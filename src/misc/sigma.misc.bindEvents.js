@@ -175,6 +175,26 @@
           });
       }
 
+      function onMouseup(e) {
+        if (!self.settings('eventsEnabled'))
+          return;
+        var nodes = getNodes(e);
+        if (nodes.length) {
+          self.dispatchEvent('mouseup', {node: nodes[0]});
+        }
+        onMove(e);
+      }
+
+      function onMousedown(e) {
+        if (!self.settings('eventsEnabled'))
+          return;
+        var nodes = getNodes(e);
+        if (nodes.length) {
+          self.dispatchEvent('mousedown', {node: nodes[0]});
+        }
+        onMove(e);
+      }
+
       function onMove(e) {
         if (!self.settings('eventsEnabled'))
           return;
@@ -231,8 +251,8 @@
 
       // Bind events:
       captor.bind('click', onClick);
-      captor.bind('mousedown', onMove);
-      captor.bind('mouseup', onMove);
+      captor.bind('mousedown', onMousedown);
+      captor.bind('mouseup', onMouseup);
       captor.bind('mousemove', onMove);
       captor.bind('mouseout', onOut);
       captor.bind('doubleclick', onDoubleClick);
