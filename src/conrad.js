@@ -143,12 +143,11 @@
 
     if (!arguments.length)
       return;
-    else if (
-      arguments.length === 1 &&
-      Object(arguments[0]) === arguments[0]
-    )
-      for (events in arguments[0])
+    else if (arguments.length === 1 && Object(arguments[0]) === arguments[0]) {
+      for (events in arguments[0]) {
         _bind(events, arguments[0][events]);
+      }
+    }
     else if (arguments.length > 1) {
       eArray =
         Array.isArray(events) ?
