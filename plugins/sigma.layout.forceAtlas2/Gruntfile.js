@@ -25,4 +25,5 @@ module.exports = function(grunt) {
 
   // By default, we will crush and then minify
   grunt.registerTask('default', ['forceAtlas2:prod']);
+  grunt.registerTask('debug', ['forceAtlas2:prod']);
 };
