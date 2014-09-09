@@ -72,13 +72,32 @@ module.exports = function(grunt) {
   plugins.forEach(function(p) {
     var dir = 'plugins/sigma.' + p + '/';
 
-    if (fs.existsSync(dir + 'Gruntfile.js'))
+    if (fs.existsSync(dir + 'Gruntfile.js')) {
       subGrunts[p] = {
         gruntfile: dir + 'Gruntfile.js'
       };
-    else
+    }
+    else {
       pluginFiles.push(dir + '*.js');
+    }
+
   });
+
+  var pluginMinMap = pluginFiles.reduce(function(res, path) {
+
+    var dest = 'build/' + path.replace(/\/\*\.js$/, '.min.js');
+    console.log(path + ' ==> ' + dest);
+    res[dest] = path;
+    return res;
+  }, {})
+
+  var pluginMap = pluginFiles.reduce(function(res, path) {
+
+    var dest = 'build/' + path.replace(/\/\*\.js$/, '.js');
+    console.log(path + ' ==> ' + dest);
+    res[dest] = path;
+    return res;
+  }, {})
 
   // Project configuration:
   grunt.initConfig({
@@ -123,11 +142,7 @@ module.exports = function(grunt) {
         }
       },
       plugins: {
-        files: pluginFiles.reduce(function(res, path) {
-          var dest = 'build/' + path.replace(/\/\*\.js$/, '.min.js');
-          res[dest] = path;
-          return res;
-        }, {})
+        files: pluginMinMap
       }
     },
     concat: {
@@ -141,6 +156,9 @@ module.exports = function(grunt) {
       require: {
         src: npmJsFiles,
         dest: 'build/sigma.require.js'
+      },
+      plugins: {
+        files: pluginMap
       }
     },
     sed: {
@@ -175,6 +193,7 @@ module.exports = function(grunt) {
   grunt.registerTask('release', ['closureLint', 'jshint', 'qunit', 'sed', 'grunt', 'uglify', 'zip']);
   grunt.registerTask('npmPrePublish', ['uglify:plugins', 'grunt', 'concat:require']);
   grunt.registerTask('build', ['uglify', 'grunt', 'concat:require']);
+  grunt.registerTask('debug', ['grunt', 'concat:require', 'concat:plugins']);
   grunt.registerTask('test', ['qunit']);
 
   // For travis-ci.org, only launch tests:
