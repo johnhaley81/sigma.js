@@ -6,7 +6,7 @@
 
   if (typeof ShapeLibrary === 'undefined')
     throw 'ShapeLibrary is not declared';
-  
+
 
   // Initialize package:
   sigma.utils.pkg('sigma.canvas.nodes');
@@ -63,7 +63,7 @@
   }
 
 
-  var register = function(name,drawShape,drawBorder) {
+  var register = function(name,drawShape,drawBorder, contains) {
     sigma.canvas.nodes[name] = function(node, context, settings) {
       var args = arguments,
           prefix = settings('prefix') || '',
@@ -76,21 +76,23 @@
       context.save();
 
       if(drawShape) {
-        drawShape(node,x,y,size,color,context);
+        drawShape(node,x,y,size,color,context, settings);
       }
 
       if(drawBorder) {
-        drawBorder(node,x,y,size,borderColor,context);
+        drawBorder(node,x,y,size,borderColor,context, settings);
       }
-      
+
       drawImage(node,x,y,size,context);
 
       context.restore();
     };
+
+    sigma.canvas.nodes[name].contains = contains;
   }
 
   ShapeLibrary.enumerate().forEach(function(shape) {
-    register(shape.name,shape.drawShape,shape.drawBorder);
+    register(shape.name,shape.drawShape,shape.drawBorder, shape.contains);
   });
 
   /**

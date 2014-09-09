@@ -2,11 +2,12 @@
   'use strict';
 
   var shapes = [];
-  var register = function(name,drawShape,drawBorder) {
+  var register = function(name,drawShape,drawBorder,contains) {
     shapes.push({
       'name': name,
       'drawShape': drawShape,
-      'drawBorder': drawBorder
+      'drawBorder': drawBorder,
+      'contains': contains
     });
   }
 
@@ -145,13 +146,16 @@
   }
   register("pacman",drawPacman,null);
 
-  var drawLabel = function (node,x,y,size,color, context) {
+  var drawLabel = function (node,x,y,size,color, context, settings) {
     var label = node.text || "",
-        height = 12,
-        width = height,
+        height = (settings('labelSize') === 'fixed') ?
+          settings('defaultLabelSize') :
+          settings('labelSizeRatio') * size,
+        width,
         padding = 5;
 
-    context.font = height + "px Georgia";
+    context.font = (settings('fontStyle') ? settings('fontStyle') + ' ' : '') + height + 'px'  + settings('font');
+
     width = context.measureText(label).width || width;
 
     var top = y - height/2 - padding,
@@ -160,19 +164,24 @@
         right = x;
 
     // start at bottom right, go around clockwise
-    context.beginPath();
-    context.moveTo(right, bottom);
-    context.lineTo(left, bottom);
-    context.lineTo(left, top);
-    context.lineTo(right,top);
-    context.closePath();
-    context.strokeStyle = color;
-    context.stroke();
+    context.fillStyle = node.color;
+    context.fillRect(left, top, right - left, bottom - top);
 
-    context.fillStyle = 'black';
-    context.fillText(label, left + padding, bottom - 1.5*padding);
+    context.fillStyle = 'white';
+    context.fillText(label, left + padding, bottom - 1.75*padding);
+
+    // save the boundaries so we can calculate the contains afterwards
+    node.top = top;
+    node.bottom = bottom;
+    node.left = left;
+    node.right = right;
   }
-  register("ref-label", drawLabel, null);
+
+  var labelContains = function(node, x, y) {
+    return x >= node.left && x <= node.right && y >= node.top && y <= node.bottom;
+  }
+
+  register("ref-label", drawLabel, null, labelContains);
 
   var drawMerge = function (node, x, y, size, color, context) {
     context.beginPath();
