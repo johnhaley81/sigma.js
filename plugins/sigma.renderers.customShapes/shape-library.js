@@ -145,6 +145,43 @@
   }
   register("pacman",drawPacman,null);
 
+  var drawLabel = function (node,x,y,size,color, context) {
+    var label = node.text || "",
+        height = 12,
+        width = height,
+        padding = 5;
+
+    context.font = height + "px Georgia";
+    width = context.measureText(label).width || width;
+
+    var top = y - height/2 - padding,
+        bottom = y + height/2 + padding,
+        left = x - width - 2*padding,
+        right = x;
+
+    // start at bottom right, go around clockwise
+    context.beginPath();
+    context.moveTo(right, bottom);
+    context.lineTo(left, bottom);
+    context.lineTo(left, top);
+    context.lineTo(right,top);
+    context.closePath();
+    context.strokeStyle = color;
+    context.stroke();
+
+    context.fillStyle = 'black';
+    context.fillText(label, left + padding, bottom - 1.5*padding);
+  }
+  register("ref-label", drawLabel, null);
+
+  var drawMerge = function (node, x, y, size, color, context) {
+    context.beginPath();
+    context.arc(x, y, size/2, 0, Math.PI*2, false);
+    context.strokeStyle = color;
+    context.fill();
+  }
+  register("merge", drawMerge, null);
+
   /**
    * Exporting
    * ----------
