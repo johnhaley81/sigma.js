@@ -51,6 +51,7 @@
       if (nodes.length)
         for (i = 0, l = nodes.length; i < l; i++) {
           n = nodes[i];
+          
           x = n[prefix + 'x'];
           y = n[prefix + 'y'];
           s = n[prefix + 'size'];
