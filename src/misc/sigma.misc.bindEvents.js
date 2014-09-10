@@ -75,7 +75,7 @@
       return selected;
     }
 
-    function genericNodeContains(node, x, y) {
+    function genericNodeContains(n, x, y) {
       var nodeX = n[prefix + 'x'],
           nodeY = n[prefix + 'y'],
           nodeSize = n[prefix + 'size'];
