@@ -6,7 +6,7 @@
 
   // Initialize packages:
   sigma.utils.pkg('sigma.misc');
-
+  sigma.utils.pkg('sigma.canvas.nodes');
   /**
    * This helper will bind any no-DOM renderer (for instance canvas or WebGL)
    * to its captors, to properly dispatch the good events to the sigma instance
@@ -39,6 +39,7 @@
           selected = [],
           modifiedX = mX + self.width / 2,
           modifiedY = mY + self.height / 2,
+          containsFunc,
           point = self.camera.cameraPosition(
             mX,
             mY
@@ -51,22 +52,11 @@
       if (nodes.length)
         for (i = 0, l = nodes.length; i < l; i++) {
           n = nodes[i];
-          
-          x = n[prefix + 'x'];
-          y = n[prefix + 'y'];
-          s = n[prefix + 'size'];
+          containsFunc = ((n.type && sigma.canvas.nodes[n.type] && sigma.canvas.node[n.type].contains)
+            ? sigma.canvas.node[n.type].contains
+            : genericNodeContains);
 
-          if (
-            !n.hidden &&
-            modifiedX > x - s &&
-            modifiedX < x + s &&
-            modifiedY > y - s &&
-            modifiedY < y + s &&
-            Math.sqrt(
-              Math.pow(modifiedX - x, 2) +
-              Math.pow(modifiedY - y, 2)
-            ) < s
-          ) {
+          if (!n.hidden && containsFunc(n, modifiedX, modifiedY)) {
             // Insert the node:
             inserted = false;
 
@@ -83,6 +73,26 @@
         }
 
       return selected;
+    }
+
+    function genericNodeContains(node, x, y) {
+      var nodeX = n[prefix + 'x'],
+          nodeY = n[prefix + 'y'],
+          nodeSize = n[prefix + 'size'];
+
+      return
+        (x > nodeX - s)
+        &&
+        (x < nodeX + s)
+        &&
+        (y > nodeY - s)
+        &&
+        (y > nodeY - s)
+        &&
+        Math.sqrt(
+          Math.pow(x - nodeX, 2) +
+          Math.pow(y - nodeY, 2)
+        ) < s
     }
 
     function bindCaptor(captor) {
