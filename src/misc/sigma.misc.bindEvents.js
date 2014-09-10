@@ -77,7 +77,7 @@
           nodeY = n[prefix + 'y'],
           nodeSize = n[prefix + 'size'];
 
-      return
+      return (
         (x > nodeX - nodeSize)
         &&
         (x < nodeX + nodeSize)
@@ -89,7 +89,8 @@
         Math.sqrt(
           Math.pow(x - nodeX, 2) +
           Math.pow(y - nodeY, 2)
-        ) < s
+        ) < nodeSize
+      )
     }
 
     function bindCaptor(captor) {
