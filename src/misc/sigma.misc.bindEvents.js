@@ -32,9 +32,6 @@
           j,
           l,
           n,
-          x,
-          y,
-          s,
           inserted,
           selected = [],
           modifiedX = mX + self.width / 2,
@@ -81,13 +78,13 @@
           nodeSize = n[prefix + 'size'];
 
       return
-        (x > nodeX - s)
+        (x > nodeX - nodeSize)
         &&
-        (x < nodeX + s)
+        (x < nodeX + nodeSize)
         &&
-        (y > nodeY - s)
+        (y > nodeY - nodeSize)
         &&
-        (y > nodeY - s)
+        (y > nodeY - nodeSize)
         &&
         Math.sqrt(
           Math.pow(x - nodeX, 2) +
