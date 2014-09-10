@@ -133,7 +133,7 @@
         if (_movingTimeoutId) {
           clearTimeout(_movingTimeoutId);
         }
-        
+
         _movingTimeoutId = setTimeout(function() {
           _isMoving = false;
         }, _settings('dragTimeout'));
@@ -352,7 +352,7 @@
 
       _self.dispatchEvent('doubleclick', {
         x: _startMouseX - e.target.width / 2,
-        y: _startMouseY - e.target.height / 2,a
+        y: _startMouseY - e.target.height / 2,
         clientX: e.clientX,
         clientY: e.clientY,
         ctrlKey: e.ctrlKey,
