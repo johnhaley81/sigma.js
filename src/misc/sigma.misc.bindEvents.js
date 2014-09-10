@@ -53,7 +53,7 @@
         for (i = 0, l = nodes.length; i < l; i++) {
           n = nodes[i];
           containsFunc = ((n.type && sigma.canvas.nodes[n.type] && sigma.canvas.nodes[n.type].contains)
-            ? sigma.canvas.node[n.type].contains
+            ? sigma.canvas.nodes[n.type].contains
             : genericNodeContains);
 
           if (!n.hidden && containsFunc(n, modifiedX, modifiedY)) {
