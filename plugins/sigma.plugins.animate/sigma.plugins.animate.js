@@ -98,6 +98,7 @@
    */
   sigma.plugins.animate = function(s, animate, options) {
     var o = options || {},
+        nodeFilterFn = o.nodeFilterFn || function() { return true; },
         id = ++_id,
         duration = o.duration || s.settings('animationsTime'),
         easing = typeof o.easing === 'string' ?
@@ -107,7 +108,7 @@
           sigma.utils.easings.quadraticInOut,
         start = sigma.utils.dateNow(),
         // Store initial positions:
-        startPositions = s.graph.nodes().reduce(function(res, node) {
+        startPositions = s.graph.nodes().filter(nodeFilterFn).reduce(function(res, node) {
           var k;
           res[node.id] = {};
           for (k in animate)
@@ -123,7 +124,7 @@
       var p = (sigma.utils.dateNow() - start) / duration;
 
       if (p >= 1) {
-        s.graph.nodes().forEach(function(node) {
+        s.graph.nodes().filter(nodeFilterFn).forEach(function(node) {
           for (var k in animate)
             if (k in animate)
               node[k] = node[animate[k]];
@@ -134,7 +135,7 @@
           o.onComplete();
       } else {
         p = easing(p);
-        s.graph.nodes().forEach(function(node) {
+        s.graph.nodes().filter(nodeFilterFn).forEach(function(node) {
           for (var k in animate)
             if (k in animate) {
               if (k.match(/color$/))
