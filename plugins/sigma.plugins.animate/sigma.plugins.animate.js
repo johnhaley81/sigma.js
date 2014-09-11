@@ -117,46 +117,70 @@
           return res;
         }, {});
 
-    s.animations = s.animations || Object.create({});
-    sigma.plugins.kill(s);
+    s.animations = s.animations || {};
+    sigma.plugins.animate.kill(s);
 
     function step() {
       var p = (sigma.utils.dateNow() - start) / duration;
 
       if (p >= 1) {
         s.graph.nodes().filter(nodeFilterFn).forEach(function(node) {
-          for (var k in animate)
-            if (k in animate)
+          for (var k in animate) {
+            if (k in animate) {
               node[k] = node[animate[k]];
+            }
+          }
         });
 
-        s.refresh();
-        if (typeof o.onComplete === 'function')
+        if (typeof o.onComplete === 'function') {
           o.onComplete();
+        }
+
+        step.isFinished = true;
       } else {
         p = easing(p);
         s.graph.nodes().filter(nodeFilterFn).forEach(function(node) {
-          for (var k in animate)
+          for (var k in animate) {
             if (k in animate) {
-              if (k.match(/color$/))
+              if (k.match(/color$/)) {
                 node[k] = interpolateColors(
                   startPositions[node.id][k],
                   node[animate[k]],
                   p
                 );
-              else
+              } else {
                 node[k] =
                   node[animate[k]] * p +
                   startPositions[node.id][k] * (1 - p);
+              }
             }
+          }
         });
-
-        s.refresh();
-        s.animations[id] = requestAnimationFrame(step);
       }
     }
 
-    step();
+    s.animations[id] = step;
+  };
+
+  sigma.plugins.animate.start = function(s) {
+    var playAnimations = function() {
+      var animations = s.animations || {};
+
+      for(var animation in animations) {
+        if(animations.hasOwnProperty(animation)) {
+          animations[animation]();
+
+          if (animations[animation].isFinished) {
+            delete animations[animation];
+          }
+        }
+      }
+
+      s.refresh();
+      s.currentAnimationFrame = requestAnimationFrame(playAnimations);
+    };
+
+    playAnimations();
   };
 
   sigma.plugins.animateNode = function(s, node, animate, options) {
@@ -184,7 +208,6 @@
         })();
 
     s.animations = s.animations || {};
-    sigma.plugins.kill(s);
 
     function step() {
       var p = (sigma.utils.dateNow() - start) / duration;
@@ -193,14 +216,12 @@
       if (animateIsFn){
         var isFinished = animate(node, startPositions, p);
 
-        s.refresh();
-
         if (isFinished) {
+          step.isFinished = true;
+
           if ( typeof o.onComplete === 'function') {
             o.onComplete();
           }
-        } else {
-          s.animations[id] = requestAnimationFrame(step);
         }
       } else if (p >= 1) {
         var finalValues = o.resetValuesOnComplete ? startPositions : animate;
@@ -211,7 +232,7 @@
           }
         }
 
-        s.refresh();
+        step.isFinished = true;
         if (typeof o.onComplete === 'function') {
           o.onComplete();
         }
@@ -232,17 +253,14 @@
             }
           }
         }
-
-        s.refresh();
-        s.animations[id] = requestAnimationFrame(step);
       }
     }
 
-    step();
+    s.animations[id] = step;
   };
 
-  sigma.plugins.kill = function(s) {
-    for (var k in (s.animations || {}))
-      cancelAnimationFrame(s.animations[k]);
+  sigma.plugins.animate.kill = function(s) {
+    cancelAnimationFrame(s.currentAnimationFrame);
+    s.animations = {};
   };
 }).call(window);
