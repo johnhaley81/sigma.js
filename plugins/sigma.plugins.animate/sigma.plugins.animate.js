@@ -3,7 +3,7 @@
  * some node properties. Check the sigma.plugins.animate function doc or the
  * examples/animate.html code sample to know more.
  */
-(function() {
+;(function() {
   'use strict';
 
   if (typeof sigma === 'undefined')
@@ -150,6 +150,88 @@
                   startPositions[node.id][k] * (1 - p);
             }
         });
+
+        s.refresh();
+        s.animations[id] = requestAnimationFrame(step);
+      }
+    }
+
+    step();
+  };
+
+  sigma.plugins.animateNode = function(s, node, animate, options) {
+    var o = options || {},
+        id = ++_id,
+        animateIsFn = typeof animate === 'function',
+        duration = o.duration || s.settings('animationsTime') || 500,
+        easing = typeof o.easing === 'string' ?
+          sigma.utils.easings[o.easing] :
+          typeof o.easing === 'function' ?
+          o.easing :
+          sigma.utils.easings.quadraticInOut,
+        start = sigma.utils.dateNow(),
+        // Store initial positions:
+        startPositions = (function() {
+          var result = {};
+
+          for (var k in animate) {
+            if (k in node) {
+              result[k] = node[k];
+            }
+          }
+
+          return result;
+        })();
+
+    s.animations = s.animations || {};
+    sigma.plugins.kill(s);
+
+    function step() {
+      var p = (sigma.utils.dateNow() - start) / duration;
+
+
+      if (animateIsFn){
+        var isFinished = animate(node, startPositions, p);
+
+        s.refresh();
+
+        if (isFinished) {
+          if ( typeof o.onComplete === 'function') {
+            o.onComplete();
+          }
+        } else {
+          s.animations[id] = requestAnimationFrame(step);
+        }
+      } else if (p >= 1) {
+        var finalValues = o.resetValuesOnComplete ? startPositions : animate;
+
+        for (var k in finalValues) {
+          if (k in finalValues) {
+            node[k] = finalValues[k];
+          }
+        }
+
+        s.refresh();
+        if (typeof o.onComplete === 'function') {
+          o.onComplete();
+        }
+      } else {
+        p = easing(p);
+        for (var k in animate) {
+          if (k in animate) {
+            if (k.match(/color$/)) {
+              node[k] = interpolateColors(
+                startPositions[k],
+                animate[k],
+                p
+              );
+            } else {
+              node[k] =
+                animate[k] * p +
+                startPositions[k] * (1 - p);
+            }
+          }
+        }
 
         s.refresh();
         s.animations[id] = requestAnimationFrame(step);
