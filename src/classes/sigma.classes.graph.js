@@ -496,10 +496,10 @@
         arrayToIndex[first][second][validEdge.id] = validEdge;
     }
 
-    normalizeWithObjects(this.inNeightborsIndex, validEdge.target, validEdge.source);
-    normalizeWithObjects(this.outNeightborsIndex, validEdge.source, validEdge.target);
-    normalizeWithObjects(this.allNeightborsIndex, validEdge.source, validEdge.target);
-    normalizeWithObjects(this.allNeightborsIndex, validEdge.target, validEdge.source);
+    normalizeWithObjects(this.inNeighborsIndex, validEdge.target, validEdge.source);
+    normalizeWithObjects(this.outNeighborsIndex, validEdge.source, validEdge.target);
+    normalizeWithObjects(this.allNeighborsIndex, validEdge.source, validEdge.target);
+    normalizeWithObjects(this.allNeighborsIndex, validEdge.target, validEdge.source);
 
     // Keep counts up to date:
     this.inNeighborsCount[validEdge.target]++;

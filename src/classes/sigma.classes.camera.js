@@ -51,7 +51,7 @@
     if (!this.settings('enableCamera'))
       return this;
 
-    for (var key in coordinatess || {}) {
+    for (var key in (coordinates || {})) {
       if (coordinates.hasOwnProperty(key)) {
         var value = coordinates[key];
         if (typeof value !== 'number' || isNaN(value)) {
@@ -67,7 +67,7 @@
   };
 
   /**
-   * This method takes a graph and computes for each node and edges its
+   * This method takes a graph and computes for each node and edge its
    * coordinates relatively to the center of the camera. Basically, it will
    * compute the coordinates that will be used by the graphic renderers.
    *
