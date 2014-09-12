@@ -51,18 +51,16 @@
     if (!this.settings('enableCamera'))
       return this;
 
-    var i,
-        l,
-        c = coordinates || {},
-        keys = ['x', 'y', 'ratio', 'angle'];
+    for (var key in coordinatess || {}) {
+      if (coordinates.hasOwnProperty(key)) {
+        var value = coordinates[key];
+        if (typeof value !== 'number' || isNaN(value)) {
+            throw 'Value for "' + keys[i] + '" is not a number.';
+        }
 
-    for (i = 0, l = keys.length; i < l; i++)
-      if (c[keys[i]] !== undefined) {
-        if (typeof c[keys[i]] === 'number' && !isNaN(c[keys[i]]))
-          this[keys[i]] = c[keys[i]];
-        else
-          throw 'Value for "' + keys[i] + '" is not a number.';
+        this[key] = value;
       }
+    }
 
     this.dispatchEvent('coordinatesUpdated');
     return this;

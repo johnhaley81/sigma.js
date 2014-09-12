@@ -371,14 +371,17 @@
    */
   graph.addMethod('addNode', function(node) {
     // Check that the node is an object and has an id:
-    if (Object(node) !== node || arguments.length !== 1)
+    if (Object(node) !== node || arguments.length !== 1) {
       throw 'addNode: Wrong arguments.';
+    }
 
-    if (typeof node.id !== 'string')
+    if (typeof node.id !== 'string') {
       throw 'The node must have a string id.';
+    }
 
-    if (this.nodesIndex[node.id])
+    if (this.nodesIndex[node.id]) {
       throw 'The node "' + node.id + '" already exists.';
+    }
 
     var k,
         id = node.id,
@@ -486,29 +489,17 @@
     this.edgesArray.push(validEdge);
     this.edgesIndex[validEdge.id] = validEdge;
 
-    if (!this.inNeighborsIndex[validEdge.target][validEdge.source])
-      this.inNeighborsIndex[validEdge.target][validEdge.source] =
-        Object.create(null);
-    this.inNeighborsIndex[validEdge.target][validEdge.source][validEdge.id] =
-      validEdge;
+    function normalizeWithObjects(arrayToIndex, first, second) {
+        if (!arrayToIndex[first][second]) {
+          arrayToIndex[first][second] = Object.create(null);
+        }
+        arrayToIndex[first][second][validEdge.id] = validEdge;
+    }
 
-    if (!this.outNeighborsIndex[validEdge.source][validEdge.target])
-      this.outNeighborsIndex[validEdge.source][validEdge.target] =
-        Object.create(null);
-    this.outNeighborsIndex[validEdge.source][validEdge.target][validEdge.id] =
-      validEdge;
-
-    if (!this.allNeighborsIndex[validEdge.source][validEdge.target])
-      this.allNeighborsIndex[validEdge.source][validEdge.target] =
-        Object.create(null);
-    this.allNeighborsIndex[validEdge.source][validEdge.target][validEdge.id] =
-      validEdge;
-
-    if (!this.allNeighborsIndex[validEdge.target][validEdge.source])
-      this.allNeighborsIndex[validEdge.target][validEdge.source] =
-        Object.create(null);
-    this.allNeighborsIndex[validEdge.target][validEdge.source][validEdge.id] =
-      validEdge;
+    normalizeWithObjects(this.inNeightborsIndex, validEdge.target, validEdge.source);
+    normalizeWithObjects(this.outNeightborsIndex, validEdge.source, validEdge.target);
+    normalizeWithObjects(this.allNeightborsIndex, validEdge.source, validEdge.target);
+    normalizeWithObjects(this.allNeightborsIndex, validEdge.target, validEdge.source);
 
     // Keep counts up to date:
     this.inNeighborsCount[validEdge.target]++;
@@ -588,27 +579,23 @@
     // Remove the edge from indexes:
     edge = this.edgesIndex[id];
     delete this.edgesIndex[id];
-    for (i = 0, l = this.edgesArray.length; i < l; i++)
+    for (i = 0, l = this.edgesArray.length; i < l; i++) {
       if (this.edgesArray[i].id === id) {
         this.edgesArray.splice(i, 1);
         break;
       }
+    }
 
-    delete this.inNeighborsIndex[edge.target][edge.source][edge.id];
-    if (!Object.keys(this.inNeighborsIndex[edge.target][edge.source]).length)
-      delete this.inNeighborsIndex[edge.target][edge.source];
+    function removeEdgeFromIndex(indexToClean, first, second) {
+      delete indexToClean[first][second][edge.id];
+      if (!Object.keys(indexToClean[first][second]).length)
+        delete indexToClean[first][second];
+    }
 
-    delete this.outNeighborsIndex[edge.source][edge.target][edge.id];
-    if (!Object.keys(this.outNeighborsIndex[edge.source][edge.target]).length)
-      delete this.outNeighborsIndex[edge.source][edge.target];
-
-    delete this.allNeighborsIndex[edge.source][edge.target][edge.id];
-    if (!Object.keys(this.allNeighborsIndex[edge.source][edge.target]).length)
-      delete this.allNeighborsIndex[edge.source][edge.target];
-
-    delete this.allNeighborsIndex[edge.target][edge.source][edge.id];
-    if (!Object.keys(this.allNeighborsIndex[edge.target][edge.source]).length)
-      delete this.allNeighborsIndex[edge.target][edge.source];
+    removeEdgeFromIndex(this.inNeighborsIndex, edge.target, edge.source);
+    removeEdgeFromIndex(this.outNeighborsIndex, edge.source, edge.target);
+    removeEdgeFromIndex(this.allNeighborsIndex, edge.source, edge.target);
+    removeEdgeFromIndex(this.allNeighborsIndex, edge.target, edge.source);
 
     this.inNeighborsCount[edge.target]--;
     this.outNeighborsCount[edge.source]--;
