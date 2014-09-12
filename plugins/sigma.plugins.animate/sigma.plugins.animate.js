@@ -98,7 +98,7 @@
    */
   sigma.plugins.animate = function(s, animate, options) {
     var o = options || {},
-        nodeFilterFn = o.nodeFilterFn || function() { return true; },
+        nodeIds = o.nodeIds,
         id = ++_id,
         duration = o.duration || s.settings('animationsTime'),
         easing = typeof o.easing === 'string' ?
@@ -108,12 +108,15 @@
           sigma.utils.easings.quadraticInOut,
         start = sigma.utils.dateNow(),
         // Store initial positions:
-        startPositions = s.graph.nodes().filter(nodeFilterFn).reduce(function(res, node) {
+        startPositions = s.graph.nodes(nodeIds).reduce(function(res, node) {
           var k;
           res[node.id] = {};
-          for (k in animate)
-            if (k in node)
+
+          for (k in animate) {
+            if (k in node) {
               res[node.id][k] = node[k];
+            }
+          }
           return res;
         }, {});
 
@@ -124,10 +127,10 @@
       var p = (sigma.utils.dateNow() - start) / duration;
 
       if (p >= 1) {
-        s.graph.nodes().filter(nodeFilterFn).forEach(function(node) {
+        s.graph.nodes(nodeIds).forEach(function(node) {
           for (var k in animate) {
             if (k in animate) {
-              node[k] = node[animate[k]];
+              node[k] = node[animate[k]] !== undefined ? node[animate[k]] : animate[k];
             }
           }
         });
@@ -139,18 +142,20 @@
         step.isFinished = true;
       } else {
         p = easing(p);
-        s.graph.nodes().filter(nodeFilterFn).forEach(function(node) {
+        s.graph.nodes(nodeIds).forEach(function(node) {
           for (var k in animate) {
             if (k in animate) {
+              var valueAnimatingTo = node[animate[k]] !== undefined ? node[animate[k]] : animate[k];
+
               if (k.match(/color$/)) {
                 node[k] = interpolateColors(
                   startPositions[node.id][k],
-                  node[animate[k]],
+                  valueAnimatingTo,
                   p
                 );
               } else {
                 node[k] =
-                  node[animate[k]] * p +
+                  valueAnimatingTo * p +
                   startPositions[node.id][k] * (1 - p);
               }
             }

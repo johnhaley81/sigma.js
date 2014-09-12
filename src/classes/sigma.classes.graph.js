@@ -710,13 +710,10 @@
    * @return {object|array}      The related node or array of nodes.
    */
   graph.addMethod('nodes', function(v) {
-    // Clone the array of nodes and return it:
-    if (!arguments.length)
-      return this.nodesArray.slice(0);
-
     // Return the related node:
-    if (arguments.length === 1 && typeof v === 'string')
+    if (arguments.length === 1 && typeof v === 'string') {
       return this.nodesIndex[v];
+    }
 
     // Return an array of the related node:
     if (
@@ -727,16 +724,19 @@
           l,
           a = [];
 
-      for (i = 0, l = v.length; i < l; i++)
-        if (typeof v[i] === 'string')
+      for (i = 0, l = v.length; i < l; i++) {
+        if (typeof v[i] === 'string') {
           a.push(this.nodesIndex[v[i]]);
-        else
+        } else {
           throw 'nodes: Wrong arguments.';
+        }
+      }
 
       return a;
     }
 
-    throw 'nodes: Wrong arguments.';
+    // Clone the array of nodes and return it:
+    return this.nodesArray.slice(0);
   });
 
   /**
