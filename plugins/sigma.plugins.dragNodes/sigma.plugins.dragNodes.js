@@ -158,8 +158,8 @@
       }
     };
 
-    renderer.bind('overNode', nodeMouseOver);
     renderer.bind('outNode', treatOutNode);
+    renderer.bind('overNode', nodeMouseOver);
   };
 
 }).call(window);

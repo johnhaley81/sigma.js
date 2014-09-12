@@ -236,24 +236,25 @@
           }
 
         // Dispatch both single and multi events:
-        for (i = 0, l = newOvers.length; i < l; i++)
-          self.dispatchEvent('overNode', {
-            node: newOvers[i],
-            captor: e.data
-          });
         for (i = 0, l = newOut.length; i < l; i++)
           self.dispatchEvent('outNode', {
             node: newOut[i],
             captor: e.data
           });
-        if (newOvers.length)
-          self.dispatchEvent('overNodes', {
-            nodes: newOvers,
-            captor: e.data
-          });
         if (newOut.length)
           self.dispatchEvent('outNodes', {
             nodes: newOut,
+            captor: e.data
+          });
+        for (i = 0, l = newOvers.length; i < l; i++)
+          self.dispatchEvent('overNode', {
+            node: newOvers[i],
+            captor: e.data
+          });
+
+        if (newOvers.length)
+          self.dispatchEvent('overNodes', {
+            nodes: newOvers,
             captor: e.data
           });
       }
