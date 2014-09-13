@@ -149,9 +149,9 @@
         });
 
     // Check the 'hideEdgesOnMove' setting:
-    if (this.settings(options, 'hideEdgesOnMove'))
-      if (this.camera.isAnimated || this.camera.isMoving)
-        drawEdges = false;
+    if (this.settings(options, 'hideEdgesOnMove') && (this.camera.isAnimated || this.camera.isMoving)) {
+      drawEdges = false;
+    }
 
     // Apply the camera's view:
     this.camera.applyView(
@@ -167,9 +167,11 @@
     this.clear();
 
     // Kill running jobs:
-    for (k in this.jobs)
-      if (conrad.hasJob(k))
+    for (k in this.jobs) {
+      if (conrad.hasJob(k)) {
         conrad.killJob(k);
+      }
+    }
 
     // Find which nodes are on screen:
     this.edgesOnScreen = [];

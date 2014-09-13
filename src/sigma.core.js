@@ -371,7 +371,8 @@
           'downNode',
           'downNodes',
           'upNode',
-          'upNodes'
+          'upNodes',
+          'render'
         ],
         this._handler
       );
