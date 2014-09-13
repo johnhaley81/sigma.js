@@ -155,7 +155,7 @@
           _lastCameraY = _camera.y;
 
           _camera.goTo({
-            x: x,
+            x: _camera.x,
             y: y
           });
         }
