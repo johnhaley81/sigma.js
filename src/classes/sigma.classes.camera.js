@@ -51,6 +51,7 @@
     if (!this.settings('enableCamera'))
       return this;
 
+    var dirty = false;
     for (var key in (coordinates || {})) {
       if (coordinates.hasOwnProperty(key)) {
         var value = coordinates[key];
@@ -58,11 +59,16 @@
             throw 'Value for "' + keys[i] + '" is not a number.';
         }
 
-        this[key] = value;
+        if (this[key] !== value) {
+          this[key] = value;
+          dirty = true;
+        }
       }
     }
 
-    this.dispatchEvent('coordinatesUpdated');
+    if (dirty) {
+      this.dispatchEvent('coordinatesUpdated');
+    }
     return this;
   };
 
