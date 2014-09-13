@@ -184,6 +184,10 @@
   register("ref-label", drawLabel, null, labelContains);
 
   var drawMerge = function (node, x, y, size, color, context) {
+    if (node.isHidden) {
+      return;
+    }
+    
     context.beginPath();
     context.arc(x, y, size/2, 0, Math.PI*2, false);
     context.strokeStyle = color;
