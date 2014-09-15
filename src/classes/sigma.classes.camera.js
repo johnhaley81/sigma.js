@@ -56,7 +56,7 @@
       if (coordinates.hasOwnProperty(key)) {
         var value = coordinates[key];
         if (typeof value !== 'number' || isNaN(value)) {
-            throw 'Value for "' + keys[i] + '" is not a number.';
+            throw 'Value for "' + key + '" is not a number.';
         }
 
         if (key == 'x') {
