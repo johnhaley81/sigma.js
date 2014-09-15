@@ -211,6 +211,12 @@
     //           > onScreenT = Math.pow(zoom, edgesPowRatio) * T
     nodesPowRatio: 0.5,
     edgesPowRatio: 0.5,
+    // {number | false} if a number, any camera movements will be restricted
+    //                  to being inside the bounds. false values are unrestricted
+    minX: false,
+    maxX: false,
+    minY: false,
+    maxY: false,
 
 
 

@@ -59,6 +59,24 @@
             throw 'Value for "' + keys[i] + '" is not a number.';
         }
 
+        if (key == 'x') {
+          if (this.settings('minX') !== false) {
+            value = Math.max(value, this.settings('minX'));
+          }
+          if (this.settings('minX') !== false) {
+            value = Math.min(value, this.settings('maxX'));
+          }
+        }
+
+        if (key == 'y') {
+          if (this.settings('minY') !== false) {
+            value = Math.max(value, this.settings('minY'));
+          }
+          if (this.settings('minY') !== false) {
+            value = Math.min(value, this.settings('maxY'));
+          }
+        }
+
         if (this[key] !== value) {
           this[key] = value;
           dirty = true;
