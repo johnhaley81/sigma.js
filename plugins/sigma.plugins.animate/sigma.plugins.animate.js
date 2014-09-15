@@ -96,80 +96,85 @@
    *                           target values.
    * @param  {?object} options Eventually an object with options.
    */
-  sigma.plugins.animate = function(s, animate, options) {
-    var o = options || {},
-        nodeIds = o.nodeIds,
-        id = ++_id,
-        duration = o.duration || s.settings('animationsTime'),
-        easing = typeof o.easing === 'string' ?
-          sigma.utils.easings[o.easing] :
-          typeof o.easing === 'function' ?
-          o.easing :
-          sigma.utils.easings.quadraticInOut,
+  sigma.plugins.animateNodes = function(instance, animation, options) {
+    var nodes = instance.graph.nodes((options || {}).nodeIds);
+    nodes.forEach(function(node) {
+      sigma.plugins.animateNode(instance, node, animation, options);
+    });
+  };
+
+  sigma.plugins.animateNode = function(instance, node, animation, options) {
+    options = options || {};
+    options.onComplete = options.onComplete || function () {};
+    instance.animations = instance.animations || {};
+
+    var id = ++_id,
+        animationIsFn = typeof animation === 'function',
+        duration = options.duration || instance.settings('animationsTime') || 500,
         start = sigma.utils.dateNow(),
-        // Store initial positions:
-        startPositions = s.graph.nodes(nodeIds).reduce(function(res, node) {
-          var k;
-          res[node.id] = {};
+        startPositions = {},
+        easing;
 
-          for (k in animate) {
-            if (k in node) {
-              res[node.id][k] = node[k];
-            }
-          }
-          return res;
-        }, {});
+    switch (typeof options.easing) {
+      case 'string':
+        easing = sigma.utils.easings[options.easing]
+        break;
+      case 'function':
+        easing = options.easing;
+      default:
+        easing = sigma.utils.easings.quadraticInOut;
+    }
 
-    s.animations = s.animations || {};
-    sigma.plugins.animate.kill(s);
+    for (var key in animation) {
+      if (key in node) {
+        startPositions[key] = node[key];
+      }
+    }
 
     function step() {
       var p = (sigma.utils.dateNow() - start) / duration;
 
-      if (p >= 1) {
-        s.graph.nodes(nodeIds).forEach(function(node) {
-          for (var k in animate) {
-            if (k in animate) {
-              node[k] = node[animate[k]] !== undefined ? node[animate[k]] : animate[k];
-            }
-          }
-        });
+      if (animationIsFn){
+        if (animation(node, startPositions, p)) {
+          step.isFinished = true;
+          options.onComplete();
+        }
+      }
+      else if (p >= 1) {
+        var finalValues = options.resetValuesOnComplete ? startPositions : animation;
 
-        if (typeof o.onComplete === 'function') {
-          o.onComplete();
+        for (var key in finalValues) {
+          node[key] = finalValues[key];
         }
 
         step.isFinished = true;
-      } else {
+        options.onComplete();
+      }
+      else {
         p = easing(p);
-        s.graph.nodes(nodeIds).forEach(function(node) {
-          for (var k in animate) {
-            if (k in animate) {
-              var valueAnimatingTo = node[animate[k]] !== undefined ? node[animate[k]] : animate[k];
-
-              if (k.match(/color$/)) {
-                node[k] = interpolateColors(
-                  startPositions[node.id][k],
-                  valueAnimatingTo,
-                  p
-                );
-              } else {
-                node[k] =
-                  valueAnimatingTo * p +
-                  startPositions[node.id][k] * (1 - p);
-              }
-            }
+        for (var key in animation) {
+          if (key.match(/color$/)) {
+            node[key] = interpolateColors(
+              startPositions[key],
+              animation[key],
+              p
+            );
           }
-        });
+          else {
+            node[key] =
+              animation[key] * p +
+              startPositions[key] * (1 - p);
+          }
+        }
       }
     }
 
-    s.animations[id] = step;
+    instance.animations[id] = step;
   };
 
-  sigma.plugins.animate.start = function(s) {
+  sigma.plugins.animateNodes.start = function(instance) {
     var playAnimations = function() {
-      var animations = s.animations || {};
+      var animations = instance.animations || {};
 
       for(var animation in animations) {
         if(animations.hasOwnProperty(animation)) {
@@ -181,91 +186,16 @@
         }
       }
 
-      s.refresh();
-      s.currentAnimationFrame = requestAnimationFrame(playAnimations);
+      instance.refresh();
+      instance.currentAnimationFrame = requestAnimationFrame(playAnimations);
     };
 
     playAnimations();
   };
 
-  sigma.plugins.animateNode = function(s, node, animate, options) {
-    var o = options || {},
-        id = ++_id,
-        animateIsFn = typeof animate === 'function',
-        duration = o.duration || s.settings('animationsTime') || 500,
-        easing = typeof o.easing === 'string' ?
-          sigma.utils.easings[o.easing] :
-          typeof o.easing === 'function' ?
-          o.easing :
-          sigma.utils.easings.quadraticInOut,
-        start = sigma.utils.dateNow(),
-        // Store initial positions:
-        startPositions = (function() {
-          var result = {};
-
-          for (var k in animate) {
-            if (k in node) {
-              result[k] = node[k];
-            }
-          }
-
-          return result;
-        })();
-
-    s.animations = s.animations || {};
-
-    function step() {
-      var p = (sigma.utils.dateNow() - start) / duration;
-
-
-      if (animateIsFn){
-        var isFinished = animate(node, startPositions, p);
-
-        if (isFinished) {
-          step.isFinished = true;
-
-          if ( typeof o.onComplete === 'function') {
-            o.onComplete();
-          }
-        }
-      } else if (p >= 1) {
-        var finalValues = o.resetValuesOnComplete ? startPositions : animate;
-
-        for (var k in finalValues) {
-          if (k in finalValues) {
-            node[k] = finalValues[k];
-          }
-        }
-
-        step.isFinished = true;
-        if (typeof o.onComplete === 'function') {
-          o.onComplete();
-        }
-      } else {
-        p = easing(p);
-        for (var k in animate) {
-          if (k in animate) {
-            if (k.match(/color$/)) {
-              node[k] = interpolateColors(
-                startPositions[k],
-                animate[k],
-                p
-              );
-            } else {
-              node[k] =
-                animate[k] * p +
-                startPositions[k] * (1 - p);
-            }
-          }
-        }
-      }
-    }
-
-    s.animations[id] = step;
+  sigma.plugins.animateNodes.kill = function(instance) {
+    cancelAnimationFrame(instance.currentAnimationFrame);
+    instance.animations = {};
   };
 
-  sigma.plugins.animate.kill = function(s) {
-    cancelAnimationFrame(s.currentAnimationFrame);
-    s.animations = {};
-  };
 }).call(window);
