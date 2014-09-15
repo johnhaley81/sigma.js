@@ -95,7 +95,6 @@ module.exports = function(grunt) {
   // Project configuration:
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    grunt: subGrunts,
     closureLint: {
       app: {
         closureLinterPath: '/usr/local/bin',
@@ -186,7 +185,7 @@ module.exports = function(grunt) {
   grunt.registerTask('release', ['closureLint', 'jshint', 'qunit', 'sed', 'grunt', 'uglify', 'zip']);
   grunt.registerTask('npmPrePublish', ['uglify:plugins', 'grunt', 'concat:require']);
   grunt.registerTask('build', ['uglify', 'grunt', 'concat:require']);
-  grunt.registerTask('debug', ['grunt', 'concat:require', 'concat:plugins']);
+  grunt.registerTask('debug', ['concat:require', 'concat:plugins']);
   grunt.registerTask('test', ['qunit']);
 
   // For travis-ci.org, only launch tests:
