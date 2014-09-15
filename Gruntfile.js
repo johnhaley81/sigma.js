@@ -55,14 +55,7 @@ module.exports = function(grunt) {
   npmJsFiles.splice(2, 0, 'src/sigma.export.js');
 
   var plugins = [
-    'layout.forceAtlas2',
-    'parsers.gexf',
-    'parsers.json',
     'plugins.animate',
-    'plugins.dragNodes',
-    'plugins.filter',
-    'plugins.neighborhoods',
-    'statistics.HITS',
     'renderers.customShapes'
   ];
 
