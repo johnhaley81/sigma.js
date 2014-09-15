@@ -55,12 +55,13 @@ module.exports = function(grunt) {
   npmJsFiles.splice(2, 0, 'src/sigma.export.js');
 
   var plugins = [
-    'plugins.animate',
-    'renderers.customShapes'
+    'animateNodes',
+    'customNodes',
+    'customEdges',
+    'customBackbground',
   ];
 
-  var pluginFiles = [],
-      subGrunts = {};
+  var pluginFiles = [];
 
   plugins.forEach(function(p) {
     var dir = 'plugins/sigma.' + p + '/';
@@ -175,19 +176,18 @@ module.exports = function(grunt) {
           return filepath.replace(/build\//, '');
         }
       }
+    },
+    copy: {
+      default: {
+        src: 'plugins/*',
+        dest: 'build/'
+      }
     }
   });
 
   require('load-grunt-tasks')(grunt);
 
   // By default, will check lint, hint, test and minify:
-  grunt.registerTask('default', ['closureLint', 'jshint', 'qunit', 'sed', 'grunt', 'uglify']);
-  grunt.registerTask('release', ['closureLint', 'jshint', 'qunit', 'sed', 'grunt', 'uglify', 'zip']);
-  grunt.registerTask('npmPrePublish', ['uglify:plugins', 'grunt', 'concat:require']);
-  grunt.registerTask('build', ['uglify', 'grunt', 'concat:require']);
-  grunt.registerTask('debug', ['concat:require', 'concat:plugins']);
-  grunt.registerTask('test', ['qunit']);
-
-  // For travis-ci.org, only launch tests:
-  grunt.registerTask('travis', ['qunit']);
+  grunt.registerTask('build', ['uglify', 'concat:require']);
+  grunt.registerTask('debug', ['concat:require', 'copy']);
 };
