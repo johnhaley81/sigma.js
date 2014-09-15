@@ -6,7 +6,7 @@
   }
 
   var sigmaInstance = undefined;
-  function register(name, drawFns, contains) {
+  function register(name, drawFns, contains, drawImageForNode) {
     sigma.canvas.nodes[name] = function(node, context, settings) {
       var args = arguments,
       prefix = settings('prefix') || '',
@@ -26,7 +26,9 @@
         drawFn(node, x, y, size, color, context, settings);
       });
 
-      drawImage(node,x,y,size,context);
+      if (drawImageForNode) {
+        drawImage(node,x,y,size,context);
+      }
 
       context.restore();
     };
@@ -83,25 +85,19 @@
   // Initialize package:
   sigma.utils.pkg('sigma.canvas.nodes');
 
-  sigma.canvas.nodes.selectedPulse = function(node, context, settings) {
+  var drawSelectedPulse = function (node, x, y, size, color, context, settings) {
+    color = 'orange'
     var prefix = settings('prefix') || '',
-    selectedNode = sigmaInstance.graph.nodes(node.selectedId);
+        selectedNode = sigmaInstance.graph.nodes(node.selectedId);
 
-    node.color = 'orange';
+    node.color = color;
 
     context.save();
 
     context.beginPath();
-    context.arc(
-      selectedNode[prefix + 'x'],
-      selectedNode[prefix + 'y'],
-      node[prefix + 'size'],
-      0,
-      Math.PI * 2,
-      true
-    );
+    context.arc(x, y, size, 0, Math.PI * 2, true);
     context.lineWidth = 1;
-    context.strokeStyle = node.color;
+    context.strokeStyle = color;
     context.globalAlpha = node.opacity;
     context.stroke();
 
@@ -134,7 +130,9 @@
 
   };
 
-  sigma.canvas.nodes.selectedPulse.contains = function() {return false;};
+  var selectedPulseContains = function() {return false;};
+
+  register('selectedPulse', drawSelectedPulse, selectedPulseContains);
 
   sigma.canvas.nodes.commit = (function() {
     var _cache = {},
@@ -251,7 +249,7 @@
     return renderer;
   })();
 
-  var drawLabel = function (node,x,y,size,color, context, settings) {
+  var drawLabel = function (node, x, y, size, color, context, settings) {
     var label = node.text || "",
     height = (settings('labelSize') === 'fixed') ?
     settings('defaultLabelSize') :
