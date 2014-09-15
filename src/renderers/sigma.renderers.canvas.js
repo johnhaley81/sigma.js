@@ -185,7 +185,7 @@
 
     // Draw background
     if (drawBackground && sigma.canvas.background) {
-      sigma.canvas.background(this.contexts.background, this.camera.y, this.width, this.height, this.nodesOnScreen, embedSettings);
+      sigma.canvas.background(this.contexts.background, this.camera, this.width, this.height, this.nodesOnScreen, embedSettings);
     }
 
     // Draw edges:
