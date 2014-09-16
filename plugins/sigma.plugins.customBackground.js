@@ -37,11 +37,11 @@
         context.beginPath();
         context.moveTo(
           x,
-          yOffset + size
+          yOffset + size - padding
         );
         context.lineTo(
           width,
-          yOffset + size
+          yOffset + size - padding
         );
         context.stroke();
       }
