@@ -251,27 +251,40 @@
 
   var drawLabel = function (node, x, y, size, color, context, settings) {
     var label = node.text || "",
-    height = (settings('labelSize') === 'fixed') ?
-    settings('defaultLabelSize') :
-    settings('labelSizeRatio') * size,
+    fontSize = (settings('labelSize') === 'fixed') ?
+      settings('defaultLabelSize') :
+      settings('labelSizeRatio') * size,
     width,
     padding = 5;
 
-    context.font = (settings('fontStyle') ? settings('fontStyle') + ' ' : '') + height + 'px'  + settings('font');
+    fontSize -= 3;
+
+    context.font = (settings('fontStyle')
+        ? settings('fontStyle') + ' '
+        : '')
+      + fontSize + 'px '  + settings('font');
 
     width = context.measureText(label).width || width;
 
-    var top = y - height/2 - padding,
-    bottom = y + height/2 + padding,
-    left = x - width - 2*padding,
-    right = x;
+    var top = y - fontSize/2 - padding,
+      bottom = y + fontSize/2 + padding,
+      left = x - width - 2*padding,
+      right = x;
 
     // start at bottom right, go around clockwise
     context.fillStyle = node.color;
     context.fillRect(left, top, right - left, bottom - top);
 
+    // darken the border around the label
+    context.beginPath();
+    context.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+    context.lineWidth = 1;
+    context.rect(left, top, right - left, bottom - top);
+    context.stroke();
+
+    // draw the tetx
     context.fillStyle = 'white';
-    context.fillText(label, left + padding, bottom - 1.75*padding);
+    context.fillText(label, left + padding, bottom - 1.5*padding);
 
     // save the boundaries so we can calculate the contains afterwards
     node.top = top;
