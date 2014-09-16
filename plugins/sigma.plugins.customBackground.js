@@ -7,9 +7,10 @@
 
   sigma.canvas.background = function(context, camera, width, height, nodes, settings) {
     var i = 0,
-    size = 0,
-    prefix = settings('prefix') || '',
-    currentY;
+      size = 0,
+      prefix = settings('prefix') || '',
+      labelPadding = 8,
+      labelEdge = width - (settings('labelOffset') || 0) - labelPadding;
 
     while (!size || size > 32) {
       if (nodes.length < (i+2)) {
@@ -24,12 +25,19 @@
         return;
       }
 
-      var y = node[prefix + 'y'];
-      if (!(node.y % 64)) {
-        context.beginPath();
-        context.fillStyle = 'rgba(112, 128, 144, 0.075)';
-        context.fillRect(0, y - (size/2), width, size);
-      }
+      var y = node[prefix + 'y'],
+        yOffset = y - (size/2),
+        x = node[prefix + 'x'],
+        padding = size * 0.2;
+
+      context.save();
+      context.beginPath();
+      context.globalAlpha = 0.1;
+      context.fillStyle = node.color;
+      context.fillRect(x, yOffset + padding, labelEdge - x, size - padding);
+      context.globalAlpha = 1;
+      context.fillRect(labelEdge, yOffset + padding, 2, size - padding);
+      context.restore();
     });
   };
 
