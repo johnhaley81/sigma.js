@@ -7,18 +7,10 @@
 
   sigma.canvas.background = function(context, camera, width, height, nodes, settings) {
     var i = 0,
-      size = 0,
-      prefix = settings('prefix') || '',
-      labelPadding = 8,
-      labelEdge = width - (settings('labelOffset') || 0) - labelPadding;
-
-    while (!size || size > 32) {
-      if (nodes.length < (i+2)) {
-        return;
-      }
-      size = Math.abs(nodes[i][prefix + 'y'] - nodes[i+1][prefix + 'y']);
-      i++;
-    }
+        size = 32 / camera.ratio,
+        prefix = settings('prefix') || '',
+        labelPadding = 8,
+        labelEdge = width - (settings('labelOffset') || 0) - labelPadding;
 
     nodes.forEach(function(node) {
       if ((node.type != 'merge' && node.type != 'commit' && node.type != 'workingDirectory') || node.hidden) {
