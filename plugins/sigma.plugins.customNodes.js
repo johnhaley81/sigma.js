@@ -249,6 +249,40 @@
     return renderer;
   })();
 
+  sigma.canvas.nodes.workingDirectory = function (node, context, settings) {
+    var prefix = settings('prefix') || '',
+      color = node.color || settings('defaultNodeColor'),
+      x = node[prefix + 'x'],
+      y = node[prefix + 'y'],
+      size = node[prefix + 'size'];
+
+    // Draw the underlying color disc
+    context.beginPath();
+    context.arc(x, y, size, 0, Math.PI*2, false);
+    context.fillStyle = color;
+    context.fill();
+
+    // Lighten the disc a little
+    context.beginPath();
+    context.arc(x, y, size, 0, Math.PI*2, false);
+    context.fillStyle = 'rgba(255, 255, 255, 0.666)';
+    context.fill();
+
+    // Draw the border:
+    context.beginPath();
+    context.arc(
+      x,
+      y,
+      size,
+      0,
+      Math.PI * 2,
+      true
+    );
+    context.lineWidth = size / 5;
+    context.strokeStyle = color || settings('defaultNodeColor');
+    context.stroke();
+  };
+
   var drawLabel = function (node, x, y, size, color, context, settings) {
     var label = node.text || "",
     fontSize = (settings('labelSize') === 'fixed') ?
@@ -277,7 +311,7 @@
 
     // darken the border around the label
     context.beginPath();
-    context.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+    context.strokeStyle = 'rgba(0, 0, 0, 0.25)';
     context.lineWidth = 1;
     context.rect(left, top, right - left, bottom - top);
     context.stroke();
@@ -298,10 +332,6 @@
   register("ref-label", drawLabel, labelContains);
 
   var drawMerge = function (node, x, y, size, color, context) {
-    if (node.isHidden) {
-      return;
-    }
-
     context.beginPath();
     context.arc(x, y, size/2, 0, Math.PI*2, false);
     context.strokeStyle = color;

@@ -26,9 +26,26 @@
       context.beginPath();
       context.globalAlpha = 0.1;
       context.fillStyle = node.color;
-      context.fillRect(x, yOffset + padding, labelEdge - x, size - (2*padding));
+      context.fillRect(x, yOffset + padding, node.type == 'workingDirectory' ? width : labelEdge - x, size - (2 * padding));
       context.globalAlpha = 1;
-      context.fillRect(labelEdge, yOffset + padding, 2, size - (2*padding)d);
+      context.fillRect(labelEdge, yOffset + padding, 2, size - (2*padding));
+
+      if (node.type == 'workingDirectory') {
+        context.setLineDash([2]);
+        context.strokeStyle = node.color;
+        context.lineWidth = 1;
+        context.beginPath();
+        context.moveTo(
+          x,
+          yOffset + size
+        );
+        context.lineTo(
+          width,
+          yOffset + size
+        );
+        context.stroke();
+      }
+
       context.restore();
     });
   };
