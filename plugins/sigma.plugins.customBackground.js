@@ -18,17 +18,17 @@
       }
 
       var y = node[prefix + 'y'],
-        yOffset = y - (size/2),
-        x = node[prefix + 'x'],
-        padding = size * 0.2;
+          x = node[prefix + 'x'],
+          yOffset = y - (size/2),
+          padding = size * 0.1;
 
       context.save();
       context.beginPath();
       context.globalAlpha = 0.1;
       context.fillStyle = node.color;
-      context.fillRect(x, yOffset + padding, labelEdge - x, size - padding);
+      context.fillRect(x, yOffset + padding, labelEdge - x, size - (2*padding));
       context.globalAlpha = 1;
-      context.fillRect(labelEdge, yOffset + padding, 2, size - padding);
+      context.fillRect(labelEdge, yOffset + padding, 2, size - (2*padding)d);
       context.restore();
     });
   };
