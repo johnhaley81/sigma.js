@@ -107,7 +107,6 @@
     options = options || {};
     options.onComplete = options.onComplete || function () {};
     instance.animations = instance.animations || {};
-    sigma.plugins.animateNodes.kill(instance);
 
     var id = ++_id,
         animationIsFn = typeof animation === 'function',
