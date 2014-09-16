@@ -80,7 +80,6 @@ module.exports = function(grunt) {
   var pluginMinMap = pluginFiles.reduce(function(res, path) {
 
     var dest = 'build/' + path.replace(/\/\*\.js$/, '.min.js');
-    console.log(path + ' ==> ' + dest);
     res[dest] = path;
     return res;
   }, {})
@@ -88,7 +87,6 @@ module.exports = function(grunt) {
   var pluginMap = pluginFiles.reduce(function(res, path) {
 
     var dest = 'build/' + path.replace(/\/\*\.js$/, '.js');
-    console.log(path + ' ==> ' + dest);
     res[dest] = path;
     return res;
   }, {})
