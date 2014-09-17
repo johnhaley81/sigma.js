@@ -13,7 +13,7 @@
         labelEdge = width - (settings('labelOffset') || 0) - labelPadding;
 
     nodes.forEach(function(node) {
-      if ((node.type != 'merge' && node.type != 'commit' && node.type != 'workingDirectory') || node.hidden) {
+      if ((node.type != 'merge' && node.type != 'commit' && node.type != 'workingDirectory' && node.type != 'rolledUpCommit') || node.hidden) {
         return;
       }
 

@@ -279,6 +279,21 @@
     context.stroke();
   };
 
+  sigma.canvas.nodes.rolledUpCommit = function (node, context, settings) {
+    var prefix = settings('prefix') || '',
+      color = node.color || settings('defaultNodeColor'),
+      x = node[prefix + 'x'],
+      y = node[prefix + 'y'],
+      size = node[prefix + 'size'];
+
+    context.save();
+
+    // Draw the square
+    context.fillStyle = color;
+    context.fillRect(x - size / 2, y - size / 2, size, size);
+    context.restore();
+  };
+
   var drawLabel = function (node, x, y, size, color, context, settings) {
     var label = node.text || "",
     fontSize = (settings('labelSize') === 'fixed') ?

@@ -41,6 +41,14 @@
     context.font = (settings('fontStyle') ? settings('fontStyle') + ' ' : '') +
       fontSize + 'px ' + settings('font');
 
+    if (node.boldLabel) {
+      context.font = "bold " + context.font;
+    }
+
+    if (node.italicLabel) {
+      context.font = "italic " + context.font;
+    }
+
     if (settings('labelColor') === 'node') {
       if (node.selected) {
         context.fillStyle = '#fff';
