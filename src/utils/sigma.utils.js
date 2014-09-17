@@ -1,8 +1,9 @@
 ;(function(undefined) {
   'use strict';
 
-  if (typeof sigma === 'undefined')
+  if (typeof sigma === 'undefined') {
     throw 'sigma is not declared';
+  }
 
   var _root = this;
 
@@ -43,15 +44,14 @@
    * @return {object}  The merged object.
    */
   sigma.utils.extend = function() {
-    var i,
-        k,
-        res = {},
-        l = arguments.length;
-
-    for (i = l - 1; i >= 0; i--)
-      for (k in arguments[i])
-        res[k] = arguments[i][k];
-
+    var res = {};
+    arguments.forEach(function(argument) {
+      for (var key in argument) {
+        if (!(key in res)) {
+          res[key] = argument[key];
+        }
+      }
+    });
     return res;
   };
 
@@ -65,7 +65,7 @@
   };
 
   /**
-   * Takes a package name as parameter and checks at each lebel if it exists,
+   * Takes a package name as parameter and checks at each level if it exists,
    * and if it does not, creates it.
    *
    * Example:
@@ -348,8 +348,6 @@
   };
 
 
-
-
   /**
    * Here are just some of the most basic easing functions, used for the
    * animated camera "goTo" calls.
@@ -385,94 +383,6 @@
       return 0.5 * k * k * k;
     return 0.5 * ((k -= 2) * k * k + 2);
   };
-
-
-
-
-  /**
-   * ************
-   * WEBGL UTILS:
-   * ************
-   */
-  /**
-   * Loads a WebGL shader and returns it.
-   *
-   * @param  {WebGLContext}           gl           The WebGLContext to use.
-   * @param  {string}                 shaderSource The shader source.
-   * @param  {number}                 shaderType   The type of shader.
-   * @param  {function(string): void} error        Callback for errors.
-   * @return {WebGLShader}                         The created shader.
-   */
-  sigma.utils.loadShader = function(gl, shaderSource, shaderType, error) {
-    var compiled,
-        shader = gl.createShader(shaderType);
-
-    // Load the shader source
-    gl.shaderSource(shader, shaderSource);
-
-    // Compile the shader
-    gl.compileShader(shader);
-
-    // Check the compile status
-    compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-
-    // If something went wrong:
-    if (!compiled) {
-      if (error) {
-        error(
-          'Error compiling shader "' + shader + '":' +
-          gl.getShaderInfoLog(shader)
-        );
-      }
-
-      gl.deleteShader(shader);
-      return null;
-    }
-
-    return shader;
-  };
-
-  /**
-   * Creates a program, attaches shaders, binds attrib locations, links the
-   * program and calls useProgram.
-   *
-   * @param  {Array.<WebGLShader>}    shaders   The shaders to attach.
-   * @param  {Array.<string>}         attribs   The attribs names.
-   * @param  {Array.<number>}         locations The locations for the attribs.
-   * @param  {function(string): void} error     Callback for errors.
-   * @return {WebGLProgram}                     The created program.
-   */
-  sigma.utils.loadProgram = function(gl, shaders, attribs, loc, error) {
-    var i,
-        linked,
-        program = gl.createProgram();
-
-    for (i = 0; i < shaders.length; ++i)
-      gl.attachShader(program, shaders[i]);
-
-    if (attribs)
-      for (i = 0; i < attribs.length; ++i)
-        gl.bindAttribLocation(
-          program,
-          locations ? locations[i] : i,
-          opt_attribs[i]
-        );
-
-    gl.linkProgram(program);
-
-    // Check the link status
-    linked = gl.getProgramParameter(program, gl.LINK_STATUS);
-    if (!linked) {
-      if (error)
-        error('Error in program linking: ' + gl.getProgramInfoLog(program));
-
-      gl.deleteProgram(program);
-      return null;
-    }
-
-    return program;
-  };
-
 
 
 
