@@ -88,17 +88,16 @@
     //    considered as the container itself (a DOM element).
     //  - If the argument passed to sigma() is a string, it will be considered
     //    as the ID of the DOM container.
-    if (
-      typeof _conf === 'string' ||
-      _conf instanceof HTMLElement
-    )
+    if (typeof _conf === 'string' || _conf instanceof HTMLElement) {
       _conf = {
         renderers: [_conf]
       };
-    else if (Object.prototype.toString.call(_conf) === '[object Array]')
+    }
+    else if (_conf instanceof Array) {
       _conf = {
         renderers: _conf
       };
+    }
 
     // Also check "renderer" and "container" keys:
     o = _conf.renderers || _conf.renderer || _conf.container;
@@ -111,20 +110,21 @@
         _conf.renderers = [o];
 
     // Recense the instance:
-    if (_conf.id) {
-      if (__instances[_conf.id])
-        throw 'sigma: Instance "' + _conf.id + '" already exists.';
-      Object.defineProperty(this, 'id', {
-        value: _conf.id
-      });
-    } else {
-      id = 0;
-      while (__instances[id])
-        id++;
-      Object.defineProperty(this, 'id', {
-        value: '' + id
-      });
+    if (!_conf.id) {
+      _conf.id = 0;
+      while (__instances[_conf.id]) {
+        _conf.id++;
+      }
     }
+
+    if (__instances[_conf.id]) {
+      throw 'sigma: Instance "' + _conf.id + '" already exists.';
+    }
+
+    Object.defineProperty(this, 'id', {
+      value: _conf.id
+    });
+
     __instances[this.id] = this;
 
     // Initialize settings function:
@@ -150,7 +150,7 @@
       value: {},
       configurable: true
     });
-    Object.defineProperty(this, 'renderersPerCamera', {
+    Object.defineProperty(this, 'rendererPerCamera', {
       value: {},
       configurable: true
     });
@@ -240,7 +240,7 @@
       self.renderCamera(camera, camera.isAnimated);
     });
 
-    this.renderersPerCamera[id] = [];
+    this.rendererPerCamera[id] = null;
 
     return camera;
   };
@@ -254,22 +254,21 @@
   sigma.prototype.killCamera = function(v) {
     v = typeof v === 'string' ? this.cameras[v] : v;
 
-    if (!v)
+    if (!v) {
       throw 'sigma.killCamera: The camera is undefined.';
+    }
 
-    var i,
-        l,
-        a = this.renderersPerCamera[v.id];
+    var renderer = this.rendererPerCamera[v.id];
 
-    for (l = a.length, i = l - 1; i >= 0; i--)
-      this.killRenderer(a[i]);
+    this.killRenderer(renderer);
 
-    delete this.renderersPerCamera[v.id];
+    delete this.rendererPerCamera[v.id];
     delete this.cameraFrames[v.id];
     delete this.cameras[v.id];
 
-    if (v.kill)
+    if (v.kill) {
       v.kill();
+    }
 
     return this;
   };
@@ -297,51 +296,57 @@
    */
   sigma.prototype.addRenderer = function(options) {
     var id,
-        fn,
+        rendererConstructor,
         camera,
-        renderer,
-        o = options || {};
+        renderer;
+    options = options || {};
 
     // Polymorphism:
-    if (typeof o === 'string')
-      o = {
-        container: document.getElementById(o)
+    if (typeof options === 'string') {
+      options = {
+        container: document.getElementById(options)
       };
-    else if (o instanceof HTMLElement)
-      o = {
-        container: o
+    }
+    else if (options instanceof HTMLElement) {
+      options = {
+        container: options
       };
+    }
 
     // Reference the new renderer:
-    if (!('id' in o)) {
+    if (!('id' in options)) {
       id = 0;
-      while (this.renderers['' + id])
+      while (this.renderers['' + id]) {
         id++;
+      }
       id = '' + id;
-    } else
-      id = o.id;
+    }
+    else {
+      id = options.id;
+    }
 
-    if (this.renderers[id])
+    if (this.renderers[id]) {
       throw 'sigma.addRenderer: The renderer "' + id + '" already exists.';
-
+    }
     // Find the good constructor:
-    fn = typeof o.type === 'function' ? o.type : sigma.renderers[o.type];
-    fn = fn || sigma.renderers.def;
+    rendererConstructor = options.type instanceof Function ? options.type : sigma.renderers[options.type];
+    rendererConstructor = rendererConstructor || sigma.renderers.def;
 
     // Find the good camera:
-    camera = 'camera' in o ?
+    camera = 'camera' in options ?
       (
-        o.camera instanceof sigma.classes.camera ?
-          o.camera :
-          this.cameras[o.camera] || this.addCamera(o.camera)
+        options.camera instanceof sigma.classes.camera ?
+          options.camera :
+          this.cameras[options.camera] || this.addCamera(options.camera)
       ) :
       this.addCamera();
 
-    if (this.cameras[camera.id] !== camera)
+    if (this.cameras[camera.id] !== camera) {
       throw 'sigma.addRenderer: The camera is not properly referenced.';
+    }
 
     // Instantiate:
-    renderer = new fn(this.graph, camera, this.settings, o);
+    renderer = new rendererConstructor(this.graph, camera, this.settings, options);
     this.renderers[id] = renderer;
     Object.defineProperty(renderer, 'id', {
       value: id
@@ -378,7 +383,7 @@
       );
 
     // Reference the renderer by its camera:
-    this.renderersPerCamera[camera.id].push(renderer);
+    this.rendererPerCamera[camera.id] = renderer;
 
     return renderer;
   };
@@ -392,25 +397,20 @@
   sigma.prototype.killRenderer = function(v) {
     v = typeof v === 'string' ? this.renderers[v] : v;
 
-    if (!v)
+    if (!v) {
       throw 'sigma.killRenderer: The renderer is undefined.';
+    }
 
-    var a = this.renderersPerCamera[v.camera.id],
-        i = a.indexOf(v);
 
-    if (i >= 0)
-      a.splice(i, 1);
-
-    if (v.kill)
+    if (v.kill) {
       v.kill();
+    }
 
+    delete this.rendererPerCamera[v.camera.id];
     delete this.renderers[v.id];
 
     return this;
   };
-
-
-
 
   /**
    * This method calls the "render" method of each renderer, with the same
@@ -422,57 +422,52 @@
    * @return {sigma} Returns the instance itself.
    */
   sigma.prototype.refresh = function() {
-    var i,
-        l,
-        k,
-        a,
-        c,
-        bounds,
+    var bounds,
         prefix = 0;
 
     // Call each middleware:
-    a = this.middlewares || [];
-    for (i = 0, l = a.length; i < l; i++)
-      a[i].call(
+    this.middlewares = this.middlewares || [];
+    this.middlewares.forEach(function(middleware, index) {
+      middleware.call(
         this,
-        (i === 0) ? '' : 'tmp' + prefix + ':',
-        (i === l - 1) ? 'ready:' : ('tmp' + (++prefix) + ':')
+        (!index) ? '' : 'tmp' + prefix + ':',
+        (index === this.middlewares.length - 1) ? 'ready:' : ('tmp' + (++prefix) + ':')
       );
+    });
 
     // Then, for each camera, call the "rescale" middleware, unless the
     // settings specify not to:
-    for (k in this.cameras) {
-      c = this.cameras[k];
-      if (
-        c.settings('autoRescale') &&
-        this.renderersPerCamera[c.id] &&
-        this.renderersPerCamera[c.id].length
-      )
+    for (key in this.cameras) {
+      var camera = this.cameras[key],
+          renderer = this.rendererPerCamera[camera.id];
+      if (camera.settings('autoRescale') && renderer) {
         sigma.middlewares.rescale.call(
           this,
-          a.length ? 'ready:' : '',
-          c.readPrefix,
+          this.middlewares.length ? 'ready:' : '',
+          camera.readPrefix,
           {
-            width: this.renderersPerCamera[c.id][0].width,
-            height: this.renderersPerCamera[c.id][0].height
+            width: renderer.width,
+            height: renderer.height
           }
         );
-      else
+      }
+      else {
         sigma.middlewares.copy.call(
           this,
-          a.length ? 'ready:' : '',
-          c.readPrefix
+          this.middlewares.length ? 'ready:' : '',
+          camera.readPrefix
         );
+      }
 
       // Find graph boundaries:
       bounds = sigma.utils.getBoundaries(
         this.graph,
-        c.readPrefix
+        camera.readPrefix
       );
 
       // Refresh quadtree:
-      c.quadtree.index(this.graph.nodes(), {
-        prefix: c.readPrefix,
+      camera.quadtree.index(this.graph.nodes(), {
+        prefix: camera.readPrefix,
         bounds: {
           x: bounds.minX,
           y: bounds.minY,
@@ -483,20 +478,21 @@
     }
 
     // Call each renderer:
-    a = Object.keys(this.renderers);
-    for (i = 0, l = a.length; i < l; i++)
-      if (this.renderers[a[i]].process) {
-        if (this.settings('skipErrors'))
+
+    Object.keys(this.renderers).forEach(function(key) {
+      if (this.renderers[key].process) {
+        if (this.settings('skipErrors')) {
           try {
-            this.renderers[a[i]].process();
+            this.renderers[key].process();
           } catch (e) {
-            console.log(
-              'Warning: The renderer "' + a[i] + '" crashed on ".process()"'
-            );
+            console.log('Warning: The renderer "' + key + '" crashed on ".process()"');
           }
-        else
+        }
+        else {
           this.renderers[a[i]].process();
+        }
       }
+    });
 
     this.render();
 
@@ -509,25 +505,22 @@
    * @return {sigma} Returns the instance itself.
    */
   sigma.prototype.render = function() {
-    var i,
-        l,
-        a,
-        prefix = 0;
-
     // Call each renderer:
-    a = Object.keys(this.renderers);
-    for (i = 0, l = a.length; i < l; i++)
-      if (this.settings('skipErrors'))
+    Object.keys(this.renderers).forEach(function(key) {
+      if (this.settings('skipErrors')) {
         try {
-          this.renderers[a[i]].render();
-        } catch (e) {
-          if (this.settings('verbose'))
-            console.log(
-              'Warning: The renderer "' + a[i] + '" crashed on ".render()"'
-            );
+          this.renderers[key].render();
         }
-      else
-        this.renderers[a[i]].render();
+        catch (e) {
+          if (this.settings('verbose')) {
+            console.log('Warning: The renderer "' + key + '" crashed on ".render()"');
+          }
+        }
+      }
+      else {
+        this.renderers[key].render();
+      }
+    });
 
     return this;
   };
@@ -544,43 +537,24 @@
    * @return {sigma}                       Returns the instance itself.
    */
   sigma.prototype.renderCamera = function(camera, force) {
-    var i,
-        l,
-        a,
-        self = this;
-
-    if (force) {
-      a = this.renderersPerCamera[camera.id];
-      for (i = 0, l = a.length; i < l; i++)
-        if (this.settings('skipErrors'))
-          try {
-            a[i].render();
-          } catch (e) {
-            if (this.settings('verbose'))
-              console.log(
-                'Warning: The renderer "' + a[i].id + '" crashed on ".render()"'
-              );
+    var self = this;
+    if (force || !this.cameraFrames[camera.id]) {
+      var renderer = this.rendererPerCamera[camera.id];
+      if (this.settings('skipErrors')) {
+        try {
+          renderer.render();
+        }
+        catch (e) {
+          if (this.settings('verbose')) {
+            console.log('Warning: The renderer "' + renderer.id + '" crashed on ".render()"');
           }
-        else
-          a[i].render();
-    } else {
-      if (!this.cameraFrames[camera.id]) {
-        a = this.renderersPerCamera[camera.id];
-        for (i = 0, l = a.length; i < l; i++)
-          if (this.settings('skipErrors'))
-            try {
-              a[i].render();
-            } catch (e) {
-              if (this.settings('verbose'))
-                console.log(
-                  'Warning: The renderer "' +
-                    a[i].id +
-                    '" crashed on ".render()"'
-                );
-            }
-          else
-            a[i].render();
+        }
+      }
+      else {
+        renderer.render();
+      }
 
+      if (!force) {
         this.cameraFrames[camera.id] = requestAnimationFrame(function() {
           delete self.cameraFrames[camera.id];
         });
@@ -595,7 +569,7 @@
    * reference from the instance.
    */
   sigma.prototype.kill = function() {
-    var k;
+    var key;
 
     // Kill graph:
     this.graph.kill();
@@ -604,20 +578,22 @@
     delete this.middlewares;
 
     // Kill each renderer:
-    for (k in this.renderers)
-      this.killRenderer(this.renderers[k]);
+    for (key in this.renderers)
+      this.killRenderer(this.renderers[key]);
 
     // Kill each camera:
-    for (k in this.cameras)
-      this.killCamera(this.cameras[k]);
+    for (key in this.cameras)
+      this.killCamera(this.cameras[key]);
 
     delete this.renderers;
     delete this.cameras;
 
     // Kill everything else:
-    for (k in this)
-      if (this.hasOwnProperty(k))
-        delete this[k];
+    for (key in this) {
+      if (this.hasOwnProperty(key)) {
+        delete this[key];
+      }
+    }
 
     delete __instances[this.id];
   };
