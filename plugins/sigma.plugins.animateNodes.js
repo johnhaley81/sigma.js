@@ -125,9 +125,19 @@
         easing = sigma.utils.easings.quadraticInOut;
     }
 
-    for (var key in animation) {
-      if (key in node) {
-        startPositions[key] = node[key];
+    if (animationIsFn) {
+      options.saveStartPositions = options.saveStartPositions || {};
+
+      for (var key in options.saveStartPositions) {
+        if (options.saveStartPositions.hasOwnProperty(key) && key in node) {
+          startPositions[key] = node[key];
+        }
+      }
+    } else {
+      for (var key in animation) {
+        if (key in node) {
+          startPositions[key] = node[key];
+        }
       }
     }
 
