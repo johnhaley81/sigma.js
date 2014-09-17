@@ -1,8 +1,9 @@
 ;(function(undefined) {
   'use strict';
 
-  if (typeof sigma === 'undefined')
+  if (typeof sigma === 'undefined') {
     throw 'sigma is not declared';
+  }
 
   // Initialize packages:
   sigma.utils.pkg('sigma.misc.animation.running');
