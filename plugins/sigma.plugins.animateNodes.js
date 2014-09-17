@@ -186,8 +186,8 @@
     var playAnimations = function() {
       var animations = instance.animations || {};
 
-      for(var animation in animations) {
-        if(animations.hasOwnProperty(animation)) {
+      for (var animation in animations) {
+        if (animations.hasOwnProperty(animation)) {
           animations[animation]();
 
           if (animations[animation].isFinished) {
