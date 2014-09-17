@@ -170,7 +170,7 @@
     _conf.middlewares = _conf.middlewares || [];
     _conf.middlewares.forEach(function(middleware) {
       this.middlewares.push(sigma.middlewares[middleware] || middleware);
-    });
+    }, this);
 
     // Check if there is already a graph to fill in:
     if (_conf.graph && _conf.graph instanceof Object) {
@@ -411,7 +411,7 @@
         (!index) ? '' : 'tmp' + prefix + ':',
         (index === this.middlewares.length - 1) ? 'ready:' : ('tmp' + (++prefix) + ':')
       );
-    });
+    }, this);
 
     // Then, for each camera, call the "rescale" middleware, unless the
     // settings specify not to:
@@ -456,7 +456,6 @@
     }
 
     // Call each renderer:
-
     Object.keys(this.renderers).forEach(function(key) {
       if (this.renderers[key].process) {
         try {
@@ -473,7 +472,7 @@
           }
         }
       }
-    });
+    }, this);
 
     this.render();
 
@@ -501,7 +500,7 @@
           throw e;
         }
       }
-    });
+    }, this);
 
     return this;
   };

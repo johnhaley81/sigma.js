@@ -72,7 +72,7 @@
     this.options.captors.forEach(function(captor) {
       captor = sigma.captors[captor] || captor;
       this.captors.push( new captor(this.domElements.mouse, this.camera, this.settings));
-    });
+    }, this);
 
     // Bind resize:
     window.addEventListener(
@@ -132,7 +132,7 @@
 
     this.nodesOnScreen.forEach(function(node) {
       index[node.id] = node;
-    })
+    }, this);
 
     this.graph.edges().forEach(function(edge) {
       var source = index[edge.source],
@@ -140,7 +140,7 @@
       if (source && !source.hidden && target && !target.hidden && edge.hidden) {
         this.edgesOnScreen.push(edge);
       }
-    });
+    }, this);
 
     drawLayers.forEach(function(type) {
       if (type == 'background') {
@@ -160,7 +160,8 @@
 
         renderer.apply(renderer, args);
       });
-    });
+    }, this);
+
     this.dispatchEvent('render');
 
     return this;
