@@ -1,11 +1,13 @@
 ;(function(undefined) {
   'use strict';
 
-  if (typeof sigma === 'undefined')
+  if (typeof sigma === 'undefined') {
     throw 'sigma is not declared';
+  }
 
-  if (typeof conrad === 'undefined')
+  if (typeof conrad === 'undefined') {
     throw 'conrad is not declared';
+  }
 
   // Initialize packages:
   sigma.utils.pkg('sigma.renderers');
@@ -13,26 +15,20 @@
   /**
    * This function is the constructor of the canvas sigma's renderer.
    *
-   * @param  {sigma.classes.graph}            graph    The graph to render.
-   * @param  {sigma.classes.camera}           camera   The camera.
-   * @param  {configurable}           settings The sigma instance settings
-   *                                           function.
-   * @param  {object}                 object   The options object.
-   * @return {sigma.renderers.canvas}          The renderer instance.
+   * @param  {sigma.classes.graph}            graph     The graph to render.
+   * @param  {sigma.classes.camera}           camera    The camera.
+   * @param  {configurable}                   settings  The sigma instance settings function.
+   * @param  {object}                         object    The options object.
+   * @return {sigma.renderers.canvas}                   The renderer instance.
    */
   sigma.renderers.canvas = function(graph, camera, settings, options) {
-    if (typeof options !== 'object')
+    if (typeof options !== 'object') {
       throw 'sigma.renderers.canvas: Wrong arguments.';
+    }
 
-    if (!(options.container instanceof HTMLElement))
+    if (!(options.container instanceof HTMLElement)) {
       throw 'Container not found.';
-
-    var k,
-        i,
-        l,
-        a,
-        fn,
-        self = this;
+    }
 
     sigma.classes.dispatcher.extend(this);
 
@@ -40,18 +36,14 @@
     Object.defineProperty(this, 'conradId', {
       value: sigma.utils.id()
     });
+
     this.graph = graph;
     this.camera = camera;
     this.contexts = {};
     this.domElements = {};
     this.options = options;
     this.container = this.options.container;
-    this.settings = (
-        typeof options.settings === 'object' &&
-        options.settings
-      ) ?
-        settings.embedObjects(options.settings) :
-        settings;
+    this.settings = settings
 
     // Node indexes:
     this.nodesOnScreen = [];
@@ -64,37 +56,23 @@
     this.options.prefix = 'renderer' + this.conradId + ':';
 
     // Initialize the DOM elements:
-    if (
-      !this.settings('batchEdgesDrawing')
-    ) {
-      this.initDOM('canvas', 'scene');
-      this.contexts.edges = this.contexts.scene;
-      this.contexts.nodes = this.contexts.scene;
-      this.contexts.labels = this.contexts.scene;
-      this.contexts.background = this.contexts.scene;
-    } else {
-      this.initDOM('canvas', 'edges');
-      this.initDOM('canvas', 'scene');
-      this.contexts.nodes = this.contexts.scene;
-      this.contexts.labels = this.contexts.scene;
-    }
+
+    this.initDOM('canvas', 'scene');
+    this.contexts.edges = this.contexts.scene;
+    this.contexts.nodes = this.contexts.scene;
+    this.contexts.labels = this.contexts.scene;
+    this.contexts.background = this.contexts.scene;
 
     this.initDOM('canvas', 'mouse');
     this.contexts.hover = this.contexts.mouse;
 
     // Initialize captors:
     this.captors = [];
-    a = this.options.captors || [sigma.captors.mouse, sigma.captors.touch];
-    for (i = 0, l = a.length; i < l; i++) {
-      fn = typeof a[i] === 'function' ? a[i] : sigma.captors[a[i]];
-      this.captors.push(
-        new fn(
-          this.domElements.mouse,
-          this.camera,
-          this.settings
-        )
-      );
-    }
+    this.options.captors = this.options.captors || [sigma.captors.mouse, sigma.captors.touch];
+    this.options.captors.forEach(function(captor) {
+      captor = sigma.captors[captor] || captor;
+      this.captors.push( new captor(this.domElements.mouse, this.camera, this.settings));
+    });
 
     // Bind resize:
     window.addEventListener(
@@ -110,9 +88,6 @@
     this.resize(false);
   };
 
-
-
-
   /**
    * This method renders the graph on the canvases.
    *
@@ -121,37 +96,13 @@
    */
   sigma.renderers.canvas.prototype.render = function(options) {
     options = options || {};
+    this.options.prefix = this.options.prefix || '',
 
-    var a,
-        i,
-        k,
-        l,
-        o,
-        id,
-        end,
-        job,
-        start,
-        edges,
-        renderers,
-        rendererType,
-        batchSize,
-        tempGCO,
-        index = {},
-        graph = this.graph,
-        nodes = this.graph.nodes,
-        prefix = this.options.prefix || '',
-        drawBackground = this.settings(options, 'drawEdges'),
-        drawEdges = this.settings(options, 'drawEdges'),
-        drawNodes = this.settings(options, 'drawNodes'),
-        drawLabels = this.settings(options, 'drawLabels'),
+    var index = {},
+        drawLayers = this.settings(options, 'drawLayers'),
         embedSettings = this.settings.embedObjects(options, {
           prefix: this.options.prefix
         });
-
-    // Check the 'hideEdgesOnMove' setting:
-    if (this.settings(options, 'hideEdgesOnMove') && (this.camera.isAnimated || this.camera.isMoving)) {
-      drawEdges = false;
-    }
 
     // Apply the camera's view:
     this.camera.applyView(
@@ -167,9 +118,9 @@
     this.clear();
 
     // Kill running jobs:
-    for (k in this.jobs) {
-      if (conrad.hasJob(k)) {
-        conrad.killJob(k);
+    for (var jobName in this.jobs) {
+      if (conrad.hasJob(jobName)) {
+        conrad.killJob(jobName);
       }
     }
 
@@ -179,120 +130,37 @@
       this.camera.getRectangle(this.width, this.height)
     );
 
-    for (a = this.nodesOnScreen, i = 0, l = a.length; i < l; i++) {
-      index[a[i].id] = a[i];
-    }
+    this.nodesOnScreen.forEach(function(node) {
+      index[node.id] = node;
+    })
 
-    // Draw background
-    if (drawBackground && sigma.canvas.background) {
-      sigma.canvas.background(this.contexts.background, this.camera, this.width, this.height, this.nodesOnScreen, embedSettings);
-    }
-
-    // Draw edges:
-    // - If settings('batchEdgesDrawing') is true, the edges are displayed per
-    //   batches. If not, they are drawn in one frame.
-    if (drawEdges) {
-      // First, let's identify which edges to draw. To do this, we just keep
-      // every edges that have at least one extremity displayed according to
-      // the quadtree and the "hidden" attribute. We also do not keep hidden
-      // edges.
-      for (a = graph.edges(), i = 0, l = a.length; i < l; i++) {
-        o = a[i];
-        if (
-          (index[o.source] || index[o.target]) &&
-          (!o.hidden && !nodes(o.source).hidden && !nodes(o.target).hidden)
-        )
-          this.edgesOnScreen.push(o);
+    this.graph.edges().forEach(function(edge) {
+      var source = index[edge.source],
+          target = index[edge.target];
+      if (source && !source.hidden && target && !target.hidden && edge.hidden) {
+        this.edgesOnScreen.push(edge);
       }
+    });
 
-      // If the "batchEdgesDrawing" settings is true, edges are batched:
-      if (this.settings(options, 'batchEdgesDrawing')) {
-        id = 'edges_' + this.conradId;
-        batchSize = embedSettings('canvasEdgesBatchSize');
-
-        edges = this.edgesOnScreen;
-        l = edges.length;
-
-        start = 0;
-        end = Math.min(edges.length, start + batchSize);
-
-        job = function() {
-          tempGCO = this.contexts.edges.globalCompositeOperation;
-          this.contexts.edges.globalCompositeOperation = 'destination-over';
-
-          renderers = sigma.canvas.edges;
-          for (i = start; i < end; i++) {
-            o = edges[i];
-            (renderers[o.type] || renderers.def)(
-              o,
-              graph.nodes(o.source),
-              graph.nodes(o.target),
-              this.contexts.edges,
-              embedSettings
-            );
-          }
-
-          // Restore original globalCompositeOperation:
-          this.contexts.edges.globalCompositeOperation = tempGCO;
-
-          // Catch job's end:
-          if (end === edges.length) {
-            delete this.jobs[id];
-            return false;
-          }
-
-          start = end + 1;
-          end = Math.min(edges.length, start + batchSize);
-          return true;
-        };
-
-        this.jobs[id] = job;
-        conrad.addJob(id, job.bind(this));
-
-      // If not, they are drawn in one frame:
-      } else {
-        renderers = sigma.canvas.edges;
-        for (a = this.edgesOnScreen, i = 0, l = a.length; i < l; i++) {
-          o = a[i];
-          (renderers[o.type] || renderers.def)(
-            o,
-            graph.nodes(o.source),
-            graph.nodes(o.target),
-            this.contexts.edges,
-            embedSettings
-          );
+    drawLayers.forEach(function(type) {
+      if (type == 'background') {
+        // Draw background
+        if (sigma.canvas.background) {
+          sigma.canvas.background(this.contexts.background, this.camera, this.width, this.height, this.nodesOnScreen, embedSettings);
         }
+        continue;
       }
-    }
 
-    // Draw nodes:
-    // - No batching
-    if (drawNodes) {
-      renderers = sigma.canvas.nodes;
-      for (a = this.nodesOnScreen, i = 0, l = a.length; i < l; i++)
-        if (!a[i].hidden)
-          (renderers[a[i].type] || renderers.def)(
-            a[i],
-            this.contexts.nodes,
-            embedSettings
-          );
-    }
+      var renderers = sigma.canvas[type];
+      this[type + 'OnScreen'].forEach(function(item) {
+        var renderer = renderers[item.type] || renderers.def,
+            args = (type == 'edges')
+                ? [item, index[item.source], index[item.target], this.contexts[type], embedSettings]
+                : [item, this.contexts[type], embedSettings];
 
-
-
-    // Draw labels:
-    // - No batching
-    if (drawLabels) {
-      renderers = sigma.canvas.labels;
-      for (a = this.nodesOnScreen, i = 0, l = a.length; i < l; i++)
-        if (!a[i].hidden)
-          (renderers[a[i].type] || renderers.def)(
-            a[i],
-            this.contexts.labels,
-            embedSettings
-          );
-    }
-
+        renderer.apply(renderer, args);
+      });
+    });
     this.dispatchEvent('render');
 
     return this;
@@ -315,8 +183,9 @@
     this.domElements[id] = dom;
     this.container.appendChild(dom);
 
-    if (tag.toLowerCase() === 'canvas')
+    if (tag.toLowerCase() === 'canvas') {
       this.contexts[id] = dom.getContext('2d');
+    }
   };
 
   /**
@@ -327,40 +196,23 @@
    * @param  {?number}                height The new height of the container.
    * @return {sigma.renderers.canvas}        Returns the instance itself.
    */
-  sigma.renderers.canvas.prototype.resize = function(w, h) {
-    var k,
-        oldWidth = this.width,
-        oldHeight = this.height,
-        pixelRatio = 1;
-        // TODO:
-        // *****
-        // This pixelRatio is the solution to display with the good definition
-        // on canvases on Retina displays (ie oversampling). Unfortunately, it
-        // has a huge performance cost...
-        //  > pixelRatio = window.devicePixelRatio || 1;
-
-    if (w !== undefined && h !== undefined) {
-      this.width = w;
-      this.height = h;
-    } else {
-      this.width = this.container.offsetWidth;
-      this.height = this.container.offsetHeight;
-
-      w = this.width;
-      h = this.height;
+  sigma.renderers.canvas.prototype.resize = function(newWidth, newHeight) {
+    if (newWidth === undefined || newHeight === undefined) {
+      newWidth = this.container.offsetWidth;
+      newHeight = this.container.offsetHeight;
     }
 
-    if (oldWidth !== this.width || oldHeight !== this.height) {
-      for (k in this.domElements) {
-        this.domElements[k].style.width = w + 'px';
-        this.domElements[k].style.height = h + 'px';
+    if (newWidth !== this.width || newHeight !== this.height) {
+      this.width = newWidth;
+      this.height = newHeight;
 
-        if (this.domElements[k].tagName.toLowerCase() === 'canvas') {
-          this.domElements[k].setAttribute('width', (w * pixelRatio) + 'px');
-          this.domElements[k].setAttribute('height', (h * pixelRatio) + 'px');
+      for (var key in this.domElements) {
+        this.domElements[key].style.width = newWidth + 'px';
+        this.domElements[key].style.height = newHeight + 'px';
 
-          if (pixelRatio !== 1)
-            this.contexts[k].scale(pixelRatio, pixelRatio);
+        if (this.domElements[key].tagName.toLowerCase() === 'canvas') {
+          this.domElements[key].setAttribute('width', newWidth + 'px');
+          this.domElements[key].setAttribute('height', newHeight + 'px');
         }
       }
     }
@@ -374,11 +226,11 @@
    * @return {sigma.renderers.canvas} Returns the instance itself.
    */
   sigma.renderers.canvas.prototype.clear = function() {
-    var k;
-
-    for (k in this.domElements)
-      if (this.domElements[k].tagName === 'CANVAS')
-        this.domElements[k].width = this.domElements[k].width;
+    for (var key in this.domElements) {
+      if (this.domElements[key].tagName.toLower() === 'canvas') {
+        this.domElements[key].width = this.domElements[key].width;
+      }
+    }
 
     return this;
   };
@@ -387,29 +239,22 @@
    * This method kills contexts and other attributes.
    */
   sigma.renderers.canvas.prototype.kill = function() {
-    var k,
-        captor;
-
-    // Unbind resize:
     window.removeEventListener('resize', this.boundResize);
-
-    // Kill captors:
-    while ((captor = this.captors.pop()))
+    var captor;
+    while (captor = this.captors.pop()) {
       captor.kill();
+    }
     delete this.captors;
 
     // Kill contexts:
-    for (k in this.domElements) {
-      this.domElements[k].parentNode.removeChild(this.domElements[k]);
-      delete this.domElements[k];
-      delete this.contexts[k];
+    for (var key in this.domElements) {
+      this.domElements[key].parentNode.removeChild(this.domElements[key]);
+      delete this.domElements[key];
+      delete this.contexts[key];
     }
     delete this.domElements;
     delete this.contexts;
   };
-
-
-
 
   /**
    * The labels, nodes and edges renderers are stored in the three following
