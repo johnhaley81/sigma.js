@@ -61,15 +61,6 @@
    *                       sigma.settings.
    */
   var sigma = function(conf) {
-    // Local variables:
-    // ****************
-    var i,
-        l,
-        a,
-        c,
-        o,
-        id;
-
     sigma.classes.dispatcher.extend(this);
 
     // Private attributes:
@@ -82,32 +73,26 @@
     // The configuration is supposed to have a list of the configuration
     // objects for each renderer.
     //  - If there are no configuration at all, then nothing is done.
-    //  - If there are no renderer list, the given configuration object will be
-    //    considered as describing the first and only renderer.
-    //  - If there are no renderer list nor "container" object, it will be
-    //    considered as the container itself (a DOM element).
     //  - If the argument passed to sigma() is a string, it will be considered
     //    as the ID of the DOM container.
+    //  - If there is no renderer/container object, the given configuration object
+    //    will be considered as describing the renderer
+    //  - If there is no renderer/container object, it will be
+    //    considered as the container itself (a DOM element).
     if (typeof _conf === 'string' || _conf instanceof HTMLElement) {
       _conf = {
-        renderers: [_conf]
-      };
-    }
-    else if (_conf instanceof Array) {
-      _conf = {
-        renderers: _conf
+        renderer: _conf
       };
     }
 
-    // Also check "renderer" and "container" keys:
-    o = _conf.renderers || _conf.renderer || _conf.container;
-    if (!_conf.renderers || _conf.renderers.length === 0)
-      if (
-        typeof o === 'string' ||
-        o instanceof HTMLElement ||
-        (typeof o === 'object' && 'container' in o)
-      )
-        _conf.renderers = [o];
+    var _rendererObj = _conf.renderer || _conf.container;
+    if (typeof _rendererObj === 'string' || (typeof _rendererObj === 'object' && 'container' in _rendererObj)) {
+      _conf.renderer = _rendererObj;
+    }
+
+    if (!_conf.renderer) {
+      _conf.renderer = _conf;
+    }
 
     // Recense the instance:
     if (!_conf.id) {
@@ -166,32 +151,29 @@
 
     // Add a custom handler, to redispatch events from renderers:
     this._handler = (function(e) {
-      var k,
-          data = {};
+      var data = {};
 
-      for (k in e.data)
-        data[k] = e.data[k];
+      for (var key in e.data) {
+        data[key] = e.data[key];
+      }
 
       data.renderer = e.target;
       this.dispatchEvent(e.type, data);
     }).bind(this);
 
     // Initialize renderers:
-    a = _conf.renderers || [];
-    for (i = 0, l = a.length; i < l; i++)
-      this.addRenderer(a[i]);
+    if (_conf.renderer) {
+      this.addRenderer(_conf.renderer);
+    }
 
     // Initialize middlewares:
-    a = _conf.middlewares || [];
-    for (i = 0, l = a.length; i < l; i++)
-      this.middlewares.push(
-        typeof a[i] === 'string' ?
-          sigma.middlewares[a[i]] :
-          a[i]
-      );
+    _conf.middlewares = _conf.middlewares || [];
+    _conf.middlewares.forEach(function(middleware) {
+      this.middlewares.push(sigma.middlewares[middleware] || middleware);
+    });
 
     // Check if there is already a graph to fill in:
-    if (typeof _conf.graph === 'object' && _conf.graph) {
+    if (_conf.graph && _conf.graph instanceof Object) {
       this.graph.read(_conf.graph);
 
       // If a graph is given to the to the instance, the "refresh" method is
@@ -205,9 +187,6 @@
         _self.refresh();
     });
   };
-
-
-
 
   /**
    * This methods will instantiate and reference a new camera. If no id is
@@ -227,8 +206,9 @@
       id = '' + id;
     }
 
-    if (this.cameras[id])
+    if (this.cameras[id]) {
       throw 'sigma.addCamera: The camera "' + id + '" already exists.';
+    }
 
     camera = new sigma.classes.camera(id, this.graph, this.settings);
     this.cameras[id] = camera;
@@ -295,8 +275,7 @@
    *                               id.
    */
   sigma.prototype.addRenderer = function(options) {
-    var id,
-        rendererConstructor,
+    var rendererConstructor,
         camera,
         renderer;
     options = options || {};
@@ -314,19 +293,16 @@
     }
 
     // Reference the new renderer:
-    if (!('id' in options)) {
-      id = 0;
-      while (this.renderers['' + id]) {
-        id++;
+    if (!options.id) {
+      options.id = 0;
+      while (this.renderers['' + options.id]) {
+        options.id++;
       }
-      id = '' + id;
     }
-    else {
-      id = options.id;
-    }
+    options.id = '' + options.id;
 
-    if (this.renderers[id]) {
-      throw 'sigma.addRenderer: The renderer "' + id + '" already exists.';
+    if (this.renderers[options.id]) {
+      throw 'sigma.addRenderer: The renderer "' + options.id + '" already exists.';
     }
     // Find the good constructor:
     rendererConstructor = options.type instanceof Function ? options.type : sigma.renderers[options.type];
@@ -345,11 +321,15 @@
       throw 'sigma.addRenderer: The camera is not properly referenced.';
     }
 
+    if (this.rendererPerCamera[camera.id]) {
+      throw 'sigma.addRenderer: The camera ' + camera.id + ' already has a renderer';
+    }
+
     // Instantiate:
     renderer = new rendererConstructor(this.graph, camera, this.settings, options);
-    this.renderers[id] = renderer;
+    this.renderers[options.id] = renderer;
     Object.defineProperty(renderer, 'id', {
-      value: id
+      value: options.id
     });
 
     // Bind events:
@@ -395,12 +375,11 @@
    * @return {sigma}             Returns the instance.
    */
   sigma.prototype.killRenderer = function(v) {
-    v = typeof v === 'string' ? this.renderers[v] : v;
+    v = this.renderers[v] || v;
 
-    if (!v) {
+    if (!v || !v instanceof Object)) {
       throw 'sigma.killRenderer: The renderer is undefined.';
     }
-
 
     if (v.kill) {
       v.kill();
@@ -422,8 +401,7 @@
    * @return {sigma} Returns the instance itself.
    */
   sigma.prototype.refresh = function() {
-    var bounds,
-        prefix = 0;
+    var prefix = 0;
 
     // Call each middleware:
     this.middlewares = this.middlewares || [];
@@ -481,15 +459,18 @@
 
     Object.keys(this.renderers).forEach(function(key) {
       if (this.renderers[key].process) {
-        if (this.settings('skipErrors')) {
-          try {
-            this.renderers[key].process();
-          } catch (e) {
-            console.log('Warning: The renderer "' + key + '" crashed on ".process()"');
-          }
+        try {
+          this.renderers[key].process();
         }
-        else {
-          this.renderers[a[i]].process();
+        catch (e) {
+          if (this.settings('skipErrors')) {
+            if (this.settings('verbose')) {
+              console.log('Warning: The renderer "' + key + '" crashed on ".process()"');
+            }
+          }
+          else {
+            throw e;
+          }
         }
       }
     });
@@ -507,18 +488,18 @@
   sigma.prototype.render = function() {
     // Call each renderer:
     Object.keys(this.renderers).forEach(function(key) {
-      if (this.settings('skipErrors')) {
-        try {
-          this.renderers[key].render();
-        }
-        catch (e) {
+      try {
+        this.renderers[key].render();
+      }
+      catch (e) {
+        if (this.settings('skipErrors')) {
           if (this.settings('verbose')) {
             console.log('Warning: The renderer "' + key + '" crashed on ".render()"');
           }
         }
-      }
-      else {
-        this.renderers[key].render();
+        else {
+          throw e;
+        }
       }
     });
 
@@ -540,18 +521,19 @@
     var self = this;
     if (force || !this.cameraFrames[camera.id]) {
       var renderer = this.rendererPerCamera[camera.id];
-      if (this.settings('skipErrors')) {
-        try {
-          renderer.render();
-        }
-        catch (e) {
+
+      try {
+        renderer.render();
+      }
+      catch (e) {
+        if (this.settings('skipErrors')) {
           if (this.settings('verbose')) {
             console.log('Warning: The renderer "' + renderer.id + '" crashed on ".render()"');
           }
         }
-      }
-      else {
-        renderer.render();
+        else {
+          throw e;
+        }
       }
 
       if (!force) {
@@ -598,9 +580,6 @@
     delete __instances[this.id];
   };
 
-
-
-
   /**
    * Returns a clone of the instances object or a specific running instance.
    *
@@ -616,21 +595,16 @@
 
 
 
-  /**
-   * The current version of sigma:
-   */
-  sigma.version = '1.0.3';
-
-
 
 
   /**
    * EXPORT:
    * *******
    */
-  if (typeof this.sigma !== 'undefined')
+  sigma.version = '1.0.3';
+  if (typeof this.sigma !== 'undefined') {
     throw 'An object called sigma is already in the global scope.';
-
+  }
   this.sigma = sigma;
 
 }).call(this);
