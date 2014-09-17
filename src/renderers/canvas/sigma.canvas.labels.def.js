@@ -40,9 +40,16 @@
 
     context.font = (settings('fontStyle') ? settings('fontStyle') + ' ' : '') +
       fontSize + 'px ' + settings('font');
-    context.fillStyle = (settings('labelColor') === 'node') ?
-      (node.labelColor || node.color || settings('defaultNodeColor')) :
-      settings('defaultLabelColor');
+
+    if (settings('labelColor') === 'node') {
+      if (node.selected) {
+        context.fillStyle = '#fff';
+      } else {
+        context.fillStyle = node.labelColor || node.color || settings('defaultNodeColor');
+      }
+    } else {
+      context.fillStyle = settings('defaultLabelColor');
+    }
 
     labelWidth = context.measureText(node.label).width;
     labelPlacementX = Math.round(node[prefix + 'x'] + size + 3);

@@ -29,6 +29,27 @@
       context.fillRect(x, yOffset + padding, node.type == 'workingDirectory' ? width : labelEdge - x, size - (2 * padding));
       context.globalAlpha = 1;
       context.fillRect(labelEdge, yOffset + padding, 2, size - (2*padding));
+      context.closePath();
+
+      if(node.selected) {
+        context.save();
+
+        var fontSize = (settings('labelSize') === 'fixed') ?
+          settings('defaultLabelSize') :
+          settings('labelSizeRatio') * size;
+
+        context.font = (settings('fontStyle') ? settings('fontStyle') + ' ' : '') +
+          fontSize + 'px ' + settings('font');
+
+        var labelWidth = context.measureText(node.label).width;
+
+        context.beginPath();
+        context.fillStyle = '#708090';
+        context.fillRect(x, yOffset + padding, width, size - (2 * padding));
+        context.closePath();
+
+        context.restore();
+      }
 
       if (node.type == 'workingDirectory') {
         context.setLineDash([2]);

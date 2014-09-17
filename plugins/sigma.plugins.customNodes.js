@@ -153,10 +153,6 @@
         return;
       }
 
-      if(node.selected) {
-        color = 'orange';
-      }
-
       if (_cache[url]) {
         context.save();
 
