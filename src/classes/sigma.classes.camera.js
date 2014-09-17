@@ -1,8 +1,9 @@
 ;(function(undefined) {
   'use strict';
 
-  if (typeof sigma === 'undefined')
+  if (typeof sigma === 'undefined') {
     throw 'sigma is not declared';
+  }
 
   sigma.utils.pkg('sigma.classes');
 
@@ -48,8 +49,9 @@
    * @return {camera}             Returns the camera.
    */
   sigma.classes.camera.prototype.goTo = function(coordinates) {
-    if (!this.settings('enableCamera'))
+    if (!this.settings('enableCamera')) {
       return this;
+    }
 
     var dirty = false;
     for (var key in (coordinates || {})) {
@@ -114,36 +116,22 @@
     read = read !== undefined ? read : this.readPrefix;
 
     var nodes = options.nodes || this.graph.nodes(),
-        edges = options.edges || this.graph.edges();
-
-    var i,
-        l,
-        node,
+        edges = options.edges || this.graph.edges(),
         cos = Math.cos(this.angle),
         sin = Math.sin(this.angle);
 
-    for (i = 0, l = nodes.length; i < l; i++) {
-      node = nodes[i];
-      node[write + 'x'] =
-        (
-          ((node[read + 'x'] || 0) - this.x) * cos +
-          ((node[read + 'y'] || 0) - this.y) * sin
-        ) / this.ratio + (options.width || 0) / 2;
-      node[write + 'y'] =
-        (
-          ((node[read + 'y'] || 0) - this.y) * cos -
-          ((node[read + 'x'] || 0) - this.x) * sin
-        ) / this.ratio + (options.height || 0) / 2;
-      node[write + 'size'] =
-        (node[read + 'size'] || 0) /
-        Math.pow(this.ratio, this.settings('nodesPowRatio'));
-    }
+    nodes.forEach(function(node){
+      var readX = (node[read + 'x'] || 0) - this.x,
+          readY = (node[read + 'y'] || 0) - this.y;
 
-    for (i = 0, l = edges.length; i < l; i++) {
-      edges[i][write + 'size'] =
-        (edges[i][read + 'size'] || 0) /
-        Math.pow(this.ratio, this.settings('edgesPowRatio'));
-    }
+      node[write + 'x'] = (readX * cos + readY * sin / this.ratio) + ((options.width || 0) / 2);
+      node[write + 'y'] = (readY * cos - readX * sin / this.ratio) + ((options.height || 0) / 2);
+      node[write + 'size'] = (node[read + 'size'] || 0) / Math.pow(this.ratio, this.settings('nodesPowRatio'));
+    }, this);
+
+    edges.forEach(function(edge) {
+      edge[write+'size'] = (edge[read + 'size'] || 0) / Math.pow(this.ratio, this.settings('edgesPowRatio'));
+    }, this);
 
     return this;
   };
@@ -159,21 +147,19 @@
    * @return {object}   The point coordinates in the frame of the graph.
    */
   sigma.classes.camera.prototype.graphPosition = function(x, y, vector) {
-    var X = 0,
-        Y = 0,
-        cos = Math.cos(this.angle),
+    var cos = Math.cos(this.angle),
         sin = Math.sin(this.angle);
+
+    x = (x * cos + y * sin) / this.ratio;
+    y = (y * cos - x * sin) / this.ratio;
 
     // Revert the origin differential vector:
     if (!vector) {
-      X = - (this.x * cos + this.y * sin) / this.ratio;
-      Y = - (this.y * cos - this.x * sin) / this.ratio;
+      x -= (this.x * cos + this.y * sin) / this.ratio;
+      y -= (this.y * cos - this.x * sin) / this.ratio;
     }
 
-    return {
-      x: (x * cos + y * sin) / this.ratio + X,
-      y: (y * cos - x * sin) / this.ratio + Y
-    };
+    return {x: x, y: y};
   };
 
   /**
@@ -187,20 +173,20 @@
    * @return {object}   The point coordinates in the frame of the camera.
    */
   sigma.classes.camera.prototype.cameraPosition = function(x, y, vector) {
-    var X = 0,
-        Y = 0,
+    var revX = 0,
+        revY = 0,
         cos = Math.cos(this.angle),
         sin = Math.sin(this.angle);
 
     // Revert the origin differential vector:
     if (!vector) {
-      X = - (this.x * cos + this.y * sin) / this.ratio;
-      Y = - (this.y * cos - this.x * sin) / this.ratio;
+      revX = - (this.x * cos + this.y * sin) / this.ratio;
+      revY = - (this.y * cos - this.x * sin) / this.ratio;
     }
 
     return {
-      x: ((x - X) * cos - (y - Y) * sin) * this.ratio,
-      y: ((y - Y) * cos + (x - X) * sin) * this.ratio
+      x: ((x - revX) * cos - (y - revY) * sin) * this.ratio,
+      y: ((y - revY) * cos + (x - revX) * sin) * this.ratio
     };
   };
 
@@ -215,15 +201,9 @@
     var scale = sigma.utils.matrices.scale(1 / this.ratio),
         rotation = sigma.utils.matrices.rotation(this.angle),
         translation = sigma.utils.matrices.translation(-this.x, -this.y),
-        matrix = sigma.utils.matrices.multiply(
-          translation,
-          sigma.utils.matrices.multiply(
-            rotation,
-            scale
-          )
-        );
+        multiplication = sigma.utils.matrices.multiply(rotation, scale);
 
-    return matrix;
+    return sigma.utils.matrices.multiply(translation, multiplication);
   };
 
   /**
