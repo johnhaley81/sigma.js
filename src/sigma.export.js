@@ -14,7 +14,8 @@ if (window === undefined)
   };
 
 if (typeof exports !== 'undefined') {
-  if (typeof module !== 'undefined' && module.exports)
+  if (typeof module !== 'undefined' && module.exports) {
     exports = module.exports = sigma;
+  }
   exports.sigma = sigma;
 }
