@@ -24,6 +24,8 @@
         _settings = settings,
         _handlers = _settings('handlers') || {},
         _moveCameraOnDragModifier = _settings('moveCameraOnDragModifier'),
+        _assignedHandlers = {},
+        _defaultHandlers = {};
 
         // CAMERA MANAGEMENT:
         // ******************
@@ -62,43 +64,32 @@
       }
     }
 
+    function addListener(target, event, handlerName) {
+      var handler = handlerOverwrideWrapper(handlerName);
+      target.addEventListener(event, handler, false);
+      _assignedHandlers.push({target: target, event: event, handler: handler};
+    }
+
     sigma.utils.doubleClick(_target, 'click', _doubleClickHandler);
-    _target.addEventListener(
-      'DOMMouseScroll',
-      handlerOverrideWrapper(_handlers.wheelHandler, _wheelHandler),
-      false);
-    _target.addEventListener(
-      'mousewheel',
-      handlerOverrideWrapper(_handlers.wheelHandler, _wheelHandler),
-      false);
-    _target.addEventListener('mousemove', _moveHandler, false);
-    _target.addEventListener('mousedown', _downHandler, false);
-    _target.addEventListener('click', _clickHandler, false);
-    _target.addEventListener('mouseout', _outHandler, false);
-    document.addEventListener('mouseup', _upHandler, false);
-
-
-
+    addListener(_target, 'DOMMouseScroll', _wheelHandler);
+    addListener(_target, 'mousewheel', _wheelHandler);
+    addListener(_target, 'mousemove', _moveHandler);
+    addListener(_target, 'mousedown', _downHandler);
+    addListener(_target, 'click', _clickHandler);
+    addListener(_target, 'mouseout', _outHandler);
+    addListener(document, 'mouseup', _upHandler);
 
     /**
      * This method unbinds every handlers that makes the captor work.
      */
     this.kill = function() {
       sigma.utils.unbindDoubleClick(_target, 'click');
-      _target.removeEventListener('DOMMouseScroll', _wheelHandler);
-      _target.removeEventListener('mousewheel', _wheelHandler);
-      _target.removeEventListener('mousemove', _moveHandler);
-      _target.removeEventListener('mousedown', _downHandler);
-      _target.removeEventListener('click', _clickHandler);
-      _target.removeEventListener('mouseout', _outHandler);
-      document.removeEventListener('mouseup', _upHandler);
+
+      var handlerInfo;
+      while (handlerInfo = _assignedHandlers.pop()) {
+        handlerInfo.target.removeEventListener(handlerInfo.event, handlerInfo.handler);
+      }
     };
-
-
-
-
-    // MOUSE EVENTS:
-    // *************
 
     /**
      * The handler listening to the 'move' mouse event. It will effectively
@@ -106,7 +97,7 @@
      *
      * @param {event} e A mouse event.
      */
-    function _moveHandler(e) {
+    _defaultHandlers._moveHandler = function(e) {
       var x,
           y,
           pos;
@@ -162,7 +153,8 @@
 
         if (e.preventDefault) {
           e.preventDefault();
-        } else {
+        }
+        else {
           e.returnValue = false;
         }
 
@@ -177,7 +169,7 @@
      *
      * @param {event} e A mouse event.
      */
-    function _upHandler(e) {
+    _defaultHandlers._upHandler = function(e) {
       if (!_settings('mouseEnabled')) {
         return;
       }
@@ -241,7 +233,7 @@
      *
      * @param {event} e A mouse event.
      */
-    function _downHandler(e) {
+    _defaultHandlers._downHandler = function(e) {
       if (!_settings('mouseEnabled')) {
         return;
       }
@@ -297,7 +289,7 @@
      *
      * @param {event} e A mouse event.
      */
-    function _outHandler(e) {
+    _defaultHandlers._outHandler = function(e) {
       if (_settings('mouseEnabled')) {
         _self.dispatchEvent('mouseout');
       }
@@ -309,7 +301,7 @@
      *
      * @param {event} e A mouse event.
      */
-    function _clickHandler(e) {
+    _defaultHandlers._clickHandler = function(e) {
       if (_settings('mouseEnabled')) {
         _self.dispatchEvent('click', {
           x: sigma.utils.getX(e) - e.target.width / 2,
@@ -339,7 +331,7 @@
      *
      * @param {event} e A mouse event.
      */
-    function _doubleClickHandler(e) {
+    _defaultHandlers._doubleClickHandler = function(e) {
       var pos,
           ratio,
           animation;
@@ -391,7 +383,7 @@
      *
      * @param {event} e A mouse event.
      */
-    function _wheelHandler(e) {
+    _defaultHandlers._wheelHandler = function(e) {
       var pos,
           ratio,
           animation;
