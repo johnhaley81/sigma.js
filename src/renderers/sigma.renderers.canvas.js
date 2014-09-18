@@ -137,7 +137,7 @@
     this.graph.edges().forEach(function(edge) {
       var source = index[edge.source],
           target = index[edge.target];
-      if (source && !source.hidden && target && !target.hidden && edge.hidden) {
+      if (source && !source.hidden && target && !target.hidden && !edge.hidden) {
         this.edgesOnScreen.push(edge);
       }
     }, this);
