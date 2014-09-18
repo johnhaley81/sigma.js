@@ -53,7 +53,6 @@
           // TODO see how we redraw on load
           // need to provide the sigmaInstance as a parameter to the library
           console.log("redraw on image load");
-          sigmaInstance.refresh();
         };
         imgCache[url] = image;
       }
@@ -120,9 +119,6 @@
         duration: 2000,
         onComplete: function() {
           node.animation = false;
-          setTimeout(function(){
-            sigmaInstance.refresh();
-          },500);
         },
         resetValuesOnComplete: true
       }

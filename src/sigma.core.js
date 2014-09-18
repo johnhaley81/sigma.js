@@ -177,17 +177,7 @@
     // Check if there is already a graph to fill in:
     if (_conf.graph && _conf.graph instanceof Object) {
       this.graph.read(_conf.graph);
-
-      // If a graph is given to the to the instance, the "refresh" method is
-      // directly called:
-      this.refresh();
     }
-
-    // Deal with resize:
-    window.addEventListener('resize', function() {
-      if (_self.settings)
-        _self.refresh();
-    });
 
     this.startRenderLoop();
   };
@@ -520,32 +510,31 @@
    * @return {sigma}                       Returns the instance itself.
    */
   sigma.prototype.renderCamera = function(camera, force) {
-    if (force || !this.animations['camera-' + camera.id]) {
-      var renderer = this.rendererPerCamera[camera.id];
+    if (force) {
+      delete this.animations['camera-' + camera.id];
+      var animation = function() {
+        var renderer = this.rendererPerCamera[camera.id];
 
-      try {
-        renderer.render();
-      }
-      catch (e) {
-        if (this.settings('skipErrors')) {
-          if (this.settings('verbose')) {
-            console.log('Warning: The renderer "' + renderer.id + '" crashed on ".render()"');
+        try {
+          renderer.render();
+        }
+        catch (e) {
+          if (this.settings('skipErrors')) {
+            if (this.settings('verbose')) {
+              console.log('Warning: The renderer "' + renderer.id + '" crashed on ".render()"');
+            }
+          }
+          else {
+            throw e;
           }
         }
-        else {
-          throw e;
-        }
+        animation.isFinished = true;
       }
-
       if (!force) {
-        var animation = function() {
-          animation.isFinished = true;
-        };
-
         this.animations['camera-' + camera.id] = animation;
       }
     }
-
+    
     return this;
   };
 
