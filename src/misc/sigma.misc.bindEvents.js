@@ -189,7 +189,10 @@
           return;
         var nodes = getNodes(e);
         if (nodes.length) {
-          self.dispatchEvent('mouseup', {node: nodes[0]});
+          self.dispatchEvent('mouseup', {
+            node: nodes[0],
+            captor: e.data
+          });
         }
         onMove(e);
       }
@@ -199,7 +202,10 @@
           return;
         var nodes = getNodes(e);
         if (nodes.length) {
-          self.dispatchEvent('mousedown', {node: nodes[0]});
+          self.dispatchEvent('mousedown', {
+            node: nodes[0],
+            captor: e.data
+          });
         }
         onMove(e);
       }
@@ -267,7 +273,7 @@
       captor.bind('mouseout', onOut);
       captor.bind('doubleclick', onDoubleClick);
       captor.bind('rightclick', onRightClick);
-      self.bind('render', onMove);
+      //self.bind('render', onMove);
     }
 
     for (i = 0, l = this.captors.length; i < l; i++)
