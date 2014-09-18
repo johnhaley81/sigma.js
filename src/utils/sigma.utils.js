@@ -45,13 +45,11 @@
    */
   sigma.utils.extend = function() {
     var res = {};
-    arguments.forEach(function(argument) {
-      for (var key in argument) {
-        if (!(key in res)) {
-          res[key] = argument[key];
-        }
+    for (var i = arguments.length - 1; i >= 0; i--) {
+      for (var k in arguments[i]) {
+        res[k] = arguments[i][k];
       }
-    });
+    }
     return res;
   };
 

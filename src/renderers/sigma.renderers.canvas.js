@@ -96,10 +96,10 @@
    */
   sigma.renderers.canvas.prototype.render = function(options) {
     options = options || {};
-    this.options.prefix = this.options.prefix || '',
+    this.options.prefix = this.options.prefix || '';
 
     var index = {},
-        drawLayers = this.settings(options, 'drawLayers'),
+        drawLayers = this.settings('drawLayers'),
         embedSettings = this.settings.embedObjects(options, {
           prefix: this.options.prefix
         });
@@ -148,18 +148,18 @@
         if (sigma.canvas.background) {
           sigma.canvas.background(this.contexts.background, this.camera, this.width, this.height, this.nodesOnScreen, embedSettings);
         }
-        continue;
+        return;
       }
 
       var renderers = sigma.canvas[type];
-      this[type + 'OnScreen'].forEach(function(item) {
+      (this[type + 'OnScreen'] || this.nodesOnScreen).forEach(function(item) {
         var renderer = renderers[item.type] || renderers.def,
             args = (type == 'edges')
                 ? [item, index[item.source], index[item.target], this.contexts[type], embedSettings]
                 : [item, this.contexts[type], embedSettings];
 
         renderer.apply(renderer, args);
-      });
+      }, this);
     }, this);
 
     this.dispatchEvent('render');
@@ -228,7 +228,7 @@
    */
   sigma.renderers.canvas.prototype.clear = function() {
     for (var key in this.domElements) {
-      if (this.domElements[key].tagName.toLower() === 'canvas') {
+      if (this.domElements[key].tagName.toLowerCase() === 'canvas') {
         this.domElements[key].width = this.domElements[key].width;
       }
     }

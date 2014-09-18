@@ -110,6 +110,8 @@
       value: _conf.id
     });
 
+    this.animations = {};
+
     __instances[this.id] = this;
 
     // Initialize settings function:
@@ -186,6 +188,8 @@
       if (_self.settings)
         _self.refresh();
     });
+
+    this.startRenderLoop();
   };
 
   /**
@@ -377,7 +381,7 @@
   sigma.prototype.killRenderer = function(v) {
     v = this.renderers[v] || v;
 
-    if (!v || !v instanceof Object)) {
+    if (!v || !v instanceof Object) {
       throw 'sigma.killRenderer: The renderer is undefined.';
     }
 
@@ -404,7 +408,6 @@
     var prefix = 0;
 
     // Call each middleware:
-    this.middlewares = this.middlewares || [];
     this.middlewares.forEach(function(middleware, index) {
       middleware.call(
         this,
@@ -415,7 +418,7 @@
 
     // Then, for each camera, call the "rescale" middleware, unless the
     // settings specify not to:
-    for (key in this.cameras) {
+    for (var key in this.cameras) {
       var camera = this.cameras[key],
           renderer = this.rendererPerCamera[camera.id];
       if (camera.settings('autoRescale') && renderer) {
@@ -438,7 +441,7 @@
       }
 
       // Find graph boundaries:
-      bounds = sigma.utils.getBoundaries(
+      var bounds = sigma.utils.getBoundaries(
         this.graph,
         camera.readPrefix
       );
@@ -517,8 +520,7 @@
    * @return {sigma}                       Returns the instance itself.
    */
   sigma.prototype.renderCamera = function(camera, force) {
-    var self = this;
-    if (force || !this.cameraFrames[camera.id]) {
+    if (force || !this.animations['camera-' + camera.id]) {
       var renderer = this.rendererPerCamera[camera.id];
 
       try {
@@ -536,9 +538,11 @@
       }
 
       if (!force) {
-        this.cameraFrames[camera.id] = requestAnimationFrame(function() {
-          delete self.cameraFrames[camera.id];
-        });
+        var animation = function() {
+          animation.isFinished = true;
+        };
+
+        this.animations['camera-' + camera.id] = animation;
       }
     }
 
@@ -559,15 +563,19 @@
     delete this.middlewares;
 
     // Kill each renderer:
-    for (key in this.renderers)
+    for (key in this.renderers) {
       this.killRenderer(this.renderers[key]);
+    }
 
     // Kill each camera:
-    for (key in this.cameras)
+    for (key in this.cameras) {
       this.killCamera(this.cameras[key]);
+    }
 
     delete this.renderers;
     delete this.cameras;
+
+    this.killRenderLoop();
 
     // Kill everything else:
     for (key in this) {
@@ -578,6 +586,36 @@
 
     delete __instances[this.id];
   };
+
+
+  sigma.prototype.startRenderLoop = function() {
+    var self = this,
+        playAnimations = function() {
+          var animations = self.animations || {};
+
+          for (var animation in animations) {
+            if (animations.hasOwnProperty(animation)) {
+              animations[animation]();
+              if (animations[animation].isFinished) {
+                delete animations[animation];
+              }
+            }
+          }
+          self.refresh();
+          self.currentAnimationFrame = requestAnimationFrame(playAnimations);
+        };
+
+    playAnimations();
+  };
+
+  sigma.prototype.killRenderLoop = function() {
+    cancelAnimationFrame(this.currentAnimationFrame);
+    this.animations = {};
+  };
+
+  sigma.prototype.clearRenderLoop = function() {
+    this.animations = {};
+  }
 
   /**
    * Returns a clone of the instances object or a specific running instance.
@@ -591,6 +629,7 @@
       __instances[id] :
       sigma.utils.extend({}, __instances);
   };
+
 
 
 

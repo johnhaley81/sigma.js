@@ -88,7 +88,7 @@
     defaultLabelHoverColor: '#000',
     // {array}  The layers to draw in order.
     //          Available values 'background', 'edges', 'nodes', 'labels'
-    drawComponents: ['background', 'edges', 'nodes', 'labels'],
+    drawLayers: ['background', 'edges', 'nodes', 'labels'],
 
 
 

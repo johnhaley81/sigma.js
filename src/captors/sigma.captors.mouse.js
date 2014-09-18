@@ -24,8 +24,8 @@
         _settings = settings,
         _handlers = _settings('handlers') || {},
         _moveCameraOnDragModifier = _settings('moveCameraOnDragModifier'),
-        _assignedHandlers = {},
-        _defaultHandlers = {};
+        _assignedHandlers = [],
+        _defaultHandlers = {},
 
         // CAMERA MANAGEMENT:
         // ******************
@@ -51,45 +51,6 @@
         _movingTimeoutId;
 
     sigma.classes.dispatcher.extend(this);
-
-    function handlerOverrideWrapper(override, original) {
-      if (!override) {
-        return original;
-      } else {
-        return function(e) {
-          if (override(e)) {
-            original(e);
-          }
-        };
-      }
-    }
-
-    function addListener(target, event, handlerName) {
-      var handler = handlerOverwrideWrapper(handlerName);
-      target.addEventListener(event, handler, false);
-      _assignedHandlers.push({target: target, event: event, handler: handler};
-    }
-
-    sigma.utils.doubleClick(_target, 'click', _doubleClickHandler);
-    addListener(_target, 'DOMMouseScroll', _wheelHandler);
-    addListener(_target, 'mousewheel', _wheelHandler);
-    addListener(_target, 'mousemove', _moveHandler);
-    addListener(_target, 'mousedown', _downHandler);
-    addListener(_target, 'click', _clickHandler);
-    addListener(_target, 'mouseout', _outHandler);
-    addListener(document, 'mouseup', _upHandler);
-
-    /**
-     * This method unbinds every handlers that makes the captor work.
-     */
-    this.kill = function() {
-      sigma.utils.unbindDoubleClick(_target, 'click');
-
-      var handlerInfo;
-      while (handlerInfo = _assignedHandlers.pop()) {
-        handlerInfo.target.removeEventListener(handlerInfo.event, handlerInfo.handler);
-      }
-    };
 
     /**
      * The handler listening to the 'move' mouse event. It will effectively
@@ -416,6 +377,47 @@
 
       e.stopPropagation();
       return false;
+    };
+
+    function handlerOverrideWrapper(override, original) {
+      if (!override) {
+        return original;
+      } else {
+        return function(e) {
+          if (override(e)) {
+            original(e);
+          }
+        };
+      }
     }
+
+    function addListener(target, event, handlerName) {
+      var handler = handlerOverrideWrapper(_handlers[handlerName], _defaultHandlers[handlerName]);
+      target.addEventListener(event, handler, false);
+      _assignedHandlers.push({target: target, event: event, handler: handler});
+    }
+
+    sigma.utils.doubleClick(_target, 'click', _defaultHandlers._doubleClickHandler);
+    addListener(_target, 'DOMMouseScroll', '_wheelHandler');
+    addListener(_target, 'mousewheel', '_wheelHandler');
+    addListener(_target, 'mousemove', '_moveHandler');
+    addListener(_target, 'mousedown', '_downHandler');
+    addListener(_target, 'click', '_clickHandler');
+    addListener(_target, 'mouseout', '_outHandler');
+    addListener(document, 'mouseup', '_upHandler');
+
+    /**
+     * This method unbinds every handlers that makes the captor work.
+     */
+    this.kill = function() {
+      sigma.utils.unbindDoubleClick(_target, 'click');
+
+      var handlerInfo;
+      while (handlerInfo = _assignedHandlers.pop()) {
+        handlerInfo.target.removeEventListener(handlerInfo.event, handlerInfo.handler);
+      }
+    };
   };
+
+
 }).call(this);

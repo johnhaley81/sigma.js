@@ -179,33 +179,6 @@
       }
     }
 
-    instance.animations[id] = step;
+    instance.animations['node-' + id] = step;
   };
-
-  sigma.plugins.animateNodes.start = function(instance) {
-    var playAnimations = function() {
-      var animations = instance.animations || {};
-
-      for (var animation in animations) {
-        if (animations.hasOwnProperty(animation)) {
-          animations[animation]();
-
-          if (animations[animation].isFinished) {
-            delete animations[animation];
-          }
-        }
-      }
-
-      instance.refresh();
-      instance.currentAnimationFrame = requestAnimationFrame(playAnimations);
-    };
-
-    playAnimations();
-  };
-
-  sigma.plugins.animateNodes.kill = function(instance) {
-    cancelAnimationFrame(instance.currentAnimationFrame);
-    instance.animations = {};
-  };
-
 }).call(window);
